@@ -1,0 +1,24 @@
+#network parameters
+Nx = 50
+Lx = 50
+z = 3.3
+kappa = 1e-2
+gammaEName = strain2.dat
+
+seed  = 113356789
+
+#shear parameters
+gmax = 20
+dg = 0.0001
+alpha = 1.025
+
+#minimization parameters
+eLine = 0.01
+dLine = 0.01
+e = 1e-16
+
+#save data to
+topologyName = topology.dat
+r0Name = r0.dat
+rName = r.dat
+
