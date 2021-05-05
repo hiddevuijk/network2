@@ -9,10 +9,13 @@
 #include <vector>
 
 #include <iostream>
+#include <fstream>
 
 class Graph {
 public:
     Graph();
+    Graph(int Nnodes): nodes( std::vector<Node*>(Nnodes, nullptr) )
+        { for(int ni = 0; ni < Nnodes; ++ni) nodes[ni] = new Node(ni); }
     ~Graph();
 
 private:
@@ -44,11 +47,27 @@ private:
    
   public:
     // Member functions
+    void write( std::ofstream& out);
+    void writePositions( std::ofstream& out);
+    std::vector<std::vector<int> > getBonds();
+    std::vector<std::vector<int> > getBends();
+    std::vector<std::vector<int> > getPolymers();
+
+    double getConnectivity();
+    double getConnectivity2();
+
+    void removeUnconnectedNodes();
+
+    void setNodePosition( int ni, double x, double y)
+        { nodes[ni]->r.x = x; nodes[ni]->r.y = y; }
+
+    vec2 getNodePosition(int n) const { return nodes[n]->r; }
+
     int addNode();  // add a node
     int addNode(double x, double y); // ad a node with position (x,y)
     void delNode(int i);
 
-    bool addBond(int i, int j); // add a bond between node i and j
+    bool addBond(int i, int j, int xboundary = 0, int yboundary = 0); // add a bond between node i and j
     void delBond(int i, int j);
     bool checkBond(int i,int j);
     
@@ -77,7 +96,7 @@ private:
   private:
 
 
-    bool addBond(Node *ni, Node *nj);
+    bool addBond(Node *ni, Node *nj,int xboundary, int yboundary);
     void delBond(Node *ni, Node *nj);
     bool checkBond( Node *ni, Node *nj);
 
@@ -114,6 +133,9 @@ public:
     Bond(): from_ptr(nullptr), to_ptr(nullptr) {}
     Bond(Node *from_ptr, Node *to_ptr)
         : from_ptr(from_ptr), to_ptr(to_ptr) {}
+    Bond(Node *from_ptr, Node *to_ptr, int xb, int yb)
+        : from_ptr(from_ptr), to_ptr(to_ptr), xb(xb), yb(yb) {}
+    
 
     void free(); // always free before deleting a Bond, except when deleting dependend bonds in free()
 
@@ -138,6 +160,11 @@ public:
     ~Bend(); // calls free()
 
     void free();  // removes all dependencies in this and other bends
+    bool hasNext() const { return nextBend != nullptr; }
+    bool hasPrev() const { return prevBend != nullptr; }
+    int prevNodeIndex() const;
+    int nextNodeIndex() const;
+    int nodeIndex() const { return mid->i; }
 
     // returns the first bend of the polymer that this is part of
     Bend* findFirst();
@@ -155,6 +182,177 @@ public:
 };
 
 // Member functions
+
+void  Graph::write( std::ofstream& out)
+{
+    std::vector<std::vector<int> > bonds = getBonds();
+    std::vector<std::vector<int> > bends = getBends();
+    std::vector<std::vector<int> > polymerList = getPolymers();
+
+    out << nodes.size() << '\n'; 
+    out << bonds.size() << '\n'; 
+    out << bends.size() << '\n'; 
+    //out << polymerList.size() << '\n'; 
+
+    std::vector<Node*>::const_iterator node_iter = nodes.begin();
+    while( node_iter != nodes.end() ) {
+        out << (*node_iter)->i << '\t';
+        out << (*node_iter)->r.x << '\t';
+        out << (*node_iter)->r.y << '\n';
+        ++node_iter;
+    }
+
+    std::vector<std::vector<int> >::const_iterator bond_iter = bonds.begin();
+    while( bond_iter != bonds.end() ) {
+        out << (*bond_iter)[0] << '\t';
+        out << (*bond_iter)[1] << '\t';
+        out << (*bond_iter)[2] << '\t';
+        out << (*bond_iter)[3] << '\n';
+        ++bond_iter;
+    }
+
+    std::vector<std::vector<int> >::const_iterator bend_iter = bends.begin();
+    while( bend_iter != bends.end() ) {
+        out << (*bend_iter)[0] << '\t';
+        out << (*bend_iter)[1] << '\t';
+        out << (*bend_iter)[2] << '\t';
+        out << (*bend_iter)[3] << '\t';
+        out << (*bend_iter)[4] << '\t';
+        out << (*bend_iter)[5] << '\t';
+        out << (*bend_iter)[6] << '\n';
+        ++bend_iter;
+    }
+
+    std::vector<std::vector<int> >::const_iterator polymer_iter = polymerList.begin();
+    std::vector<int>::const_iterator p_iter;
+    while( polymer_iter != polymerList.end() ) {
+        p_iter = polymer_iter->begin();
+        while( p_iter != polymer_iter->end() ) {
+            out << *p_iter;
+            if( p_iter == polymer_iter->end() -1 ) out << '\n';
+            else out << '\t';
+            ++p_iter;
+        }
+        ++polymer_iter;
+    }
+}
+
+void Graph::writePositions( std::ofstream& out)
+{
+    std::vector<Node*>::iterator node_iter = nodes.begin();
+    while(node_iter != nodes.end() ) {
+
+        out << (*node_iter)->r.x << '\t' << (*node_iter)->r.y << '\n';
+        ++node_iter;
+    }
+}
+
+double Graph::getConnectivity()
+{
+    double Nbonds = 0;
+    std::vector<Node*>::iterator node_iter = nodes.begin();
+    while( node_iter != nodes.end() ) {
+        Nbonds += (*node_iter)->bonds.size();
+        ++node_iter;
+    }
+
+   return Nbonds/(nodes.size()); 
+}
+
+double Graph::getConnectivity2()
+{
+    // only count nodes with bonds
+    double Nbonds = 0;
+    double Nnodes = 0;
+    std::vector<Node*>::iterator node_iter = nodes.begin();
+    while( node_iter != nodes.end() ) {
+        Nbonds += (*node_iter)->bonds.size();
+        if( (*node_iter)->bonds.size() > 0 ) ++Nnodes;
+        ++node_iter;
+    }
+
+   return Nbonds/(Nnodes); 
+}
+
+std::vector<std::vector<int> > Graph::getBonds()
+{
+    std::vector<std::vector<int> > bonds;
+    std::vector<int> bond(4);
+
+    std::vector<Node*>::const_iterator node_iter = nodes.begin();
+    std::vector<Bond*>::const_iterator bond_iter;
+    while( node_iter != nodes.end() ) {
+        bond_iter = (*node_iter)->bonds.begin();
+        while( bond_iter != (*node_iter)->bonds.end() ) {
+            // only save bond if to index > from index
+            if( (*bond_iter)->to_ptr->i > (*bond_iter)->from_ptr->i) {
+                bond[0] = (*bond_iter)->from_ptr->i;
+                bond[1] = (*bond_iter)->to_ptr->i;
+                bond[2] = (*bond_iter)->xb;
+                bond[3] = (*bond_iter)->yb;
+                bonds.push_back(bond);
+            }
+            ++bond_iter;
+        }
+        ++node_iter;
+    }
+
+    return bonds;
+}
+
+std::vector<std::vector<int> > Graph::getBends()
+{
+    std::vector<std::vector<int> > bends;
+    std::vector<int> bend(7);
+
+    std::vector<Node*>::const_iterator node_iter = nodes.begin();
+    std::vector<Bend*>::const_iterator bend_iter;
+    while( node_iter != nodes.end() ) {
+        bend_iter = (*node_iter)->bends.begin();
+        while( bend_iter != (*node_iter)->bends.end() ) {
+            bend[0] = (*bend_iter)->mid->i;
+            bend[1] = (*bend_iter)->bond_a->to_ptr->i;
+            bend[2] = (*bend_iter)->bond_a->xb;
+            bend[3] = (*bend_iter)->bond_a->yb;
+            bend[4] = (*bend_iter)->bond_b->to_ptr->i;
+            bend[5] = (*bend_iter)->bond_b->xb;
+            bend[6] = (*bend_iter)->bond_b->yb;
+            bends.push_back(bend);
+            ++bend_iter;
+        }
+        ++node_iter;
+    }
+
+    return bends;
+}
+std::vector<std::vector<int> > Graph::getPolymers()
+{
+    setPolymers();
+    std::vector<std::vector<int> > polymerList( polymers.size() );
+
+    Bend *walker; // walks over bends of a polymer
+  
+    for( std::vector<Bend*>::size_type pi = 0;  pi<polymers.size(); ++pi ) {
+        walker = polymers[pi];
+        if( walker->hasNext() == false and walker->hasPrev() == false ) {
+            polymerList[pi].push_back( walker->bond_a->to_ptr->i );
+            polymerList[pi].push_back( walker->mid->i );
+            polymerList[pi].push_back( walker->bond_b->to_ptr->i );
+        } else {
+            polymerList[pi].push_back( walker->prevNodeIndex() );
+            polymerList[pi].push_back( walker->nodeIndex() );  
+            while( walker != nullptr and walker->nextBend != polymers[pi]  ) {
+                polymerList[pi].push_back( walker->nextNodeIndex() );  
+                walker = walker->nextBend;
+            }
+            if( walker != nullptr ) polymerList[pi].push_back( walker->nextNodeIndex() );
+        }
+
+    }
+     
+    return polymerList; 
+}
+
 int Graph::addNode()
 {
     std::vector<Node*>::size_type Nv = nodes.size();
@@ -178,16 +376,16 @@ void Graph::delNode(int i)
     delete temp;
 }
 
-bool Graph::addBond(int ni, int nj)
-{ return addBond(nodes[ni], nodes[nj]); }
+bool Graph::addBond(int ni, int nj, int xboundary, int yboundary)
+{ return addBond(nodes[ni], nodes[nj], xboundary, yboundary); }
 
-bool Graph::addBond(Node *ni_ptr, Node *nj_ptr)
+bool Graph::addBond(Node *ni_ptr, Node *nj_ptr, int xboundary, int yboundary)
 {
     // if exists, do nothing
     if( checkBond(ni_ptr, nj_ptr) == true ) return false;
 
-    ni_ptr->bonds.push_back(new Bond(ni_ptr, nj_ptr) );
-    nj_ptr->bonds.push_back(new Bond(nj_ptr, ni_ptr) );
+    ni_ptr->bonds.push_back(new Bond(ni_ptr, nj_ptr, xboundary, yboundary) );
+    nj_ptr->bonds.push_back(new Bond(nj_ptr, ni_ptr, -xboundary, -yboundary) );
     return true;
 }
 
@@ -211,8 +409,6 @@ void Graph::delBond(int ni, int nj)
 
 void Graph::delBond(Node *ni_ptr, Node *nj_ptr)
 {
-
-
     // check for bends that depend on this bond
     std::vector<Bend*>::iterator bend_i_iter = ni_ptr->bends.begin();
     while( bend_i_iter != ni_ptr->bends.end() ) {
@@ -583,6 +779,25 @@ Graph::Node::~Node()
     bonds.clear();
 
 }
+
+void Graph::removeUnconnectedNodes()
+{
+    // loop over nodes
+    std::vector<Node*>::iterator node_iter = nodes.begin();
+    while( node_iter != nodes.end() ) {
+        if( (*node_iter)->bonds.size() == 0 ) {
+            Node *temp = *node_iter;
+            *node_iter = nodes.back();
+            nodes.pop_back();
+            delete temp;
+        } else {
+            ++node_iter;
+        }
+    }
+
+}
+
+
 // Bond
 void Graph::Bond::free()
 {
@@ -661,6 +876,35 @@ void Graph::Bend::free()
 }
 
 
+int Graph::Bend::prevNodeIndex() const
+{
+    if( prevBend != nullptr) { 
+        return prevBend->mid->i;
+    } else if( nextBend != nullptr ) {
+        if( bond_a->to_ptr == nextBend->mid ) {
+            return bond_b->to_ptr->i;
+        } else {
+            return bond_a->to_ptr->i;
+        }
+    } else { // order not assigned
+        return -1;
+    }
+    
+}
+int Graph::Bend::nextNodeIndex() const
+{
+    if( nextBend != nullptr ) {
+        return nextBend->mid->i;
+    } else if( prevBend != nullptr ) {
+        if( bond_a->to_ptr == prevBend->mid ) {
+            return bond_b->to_ptr->i;
+        } else {
+            return bond_a->to_ptr->i;
+        }
+    } else { // no order assigned
+        return -1;
+    }
+}
 
 Graph::Bend *Graph::Bend::findFirst()
 {

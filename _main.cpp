@@ -21,7 +21,6 @@ int main()
     string topologyName = "topology.dat";
     string r0Name = "r0.dat";
 
-
     Graph graph = generateGraph(Nx,Ny,Lx,z,seed,0);
 
 
