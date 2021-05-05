@@ -54,10 +54,11 @@ int main()
    
     cout << "-----------------------------\n"; 
 
-    g.delBond(n4,n5);
-    
-    g.showBonds();
-    g.showBends(); 
+    g.delNode(n4);
+    cout << &g << endl;
+
+    //g.showBonds();
+    //g.showBends(); 
 
     return 0;
 }

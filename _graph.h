@@ -115,8 +115,6 @@ public:
     Bond(Node *from_ptr, Node *to_ptr)
         : from_ptr(from_ptr), to_ptr(to_ptr) {}
 
-    void free(); // always free before deleting a Bond, except when deleting dependend bonds in free()
-
     // this is a bond between node from_ptr to node to_ptr
     // this bond is in the vector from_ptr->bonds
     Node *from_ptr, *to_ptr;
@@ -135,9 +133,8 @@ public:
     Bend(): mid(nullptr), bond_a(nullptr), bond_b(nullptr),
         prevBend(nullptr), nextBend(nullptr), index(-1) {}
     Bend(Node *mid, Bond *a, Bond *b, int index);
-    ~Bend(); // calls free()
 
-    void free();  // removes all dependencies in this and other bends
+    void free();
 
     // returns the first bend of the polymer that this is part of
     Bend* findFirst();
@@ -573,62 +570,26 @@ Graph::Node::~Node()
         bends[i]->free();
         delete bends[i];
     }
-    bends.clear();
 
     //  destroy all bond objects of this node
     for(std::vector<Bond*>::size_type i = 0; i < bonds.size(); ++i ) {
-        bonds[i]->free();
+        // also remove the other from bond[i]->to_ptr->bonds
+        std::vector<Bond*>::iterator bond_iter = bonds[i]->to_ptr->bonds.begin();
+        while( bond_iter != bonds[i]->to_ptr->bonds.end() ) {
+            if( (*bond_iter)->to_ptr == this ) {
+                Bond *temp = *bond_iter;
+                *bond_iter = bonds[i]->to_ptr->bonds.back();
+                bonds[i]->to_ptr->bonds.pop_back();
+                delete temp;
+                break;
+            }
+            ++bond_iter;
+        }
         delete bonds[i];
     }
-    bonds.clear();
 
 }
-// Bond
-void Graph::Bond::free()
-{
 
-    // destroy the bend in to_ptr->bends that depend on the reverse of this bond
-    std::vector<Bend*>::iterator bend_to_iter = to_ptr->bends.begin();
-    while( bend_to_iter != to_ptr->bends.end() ) {
-        if( (*bend_to_iter)->bond_a->to_ptr == from_ptr or
-            (*bend_to_iter)->bond_b->to_ptr == from_ptr ) {
-
-            Bend *temp = *bend_to_iter;
-            *bend_to_iter = to_ptr->bends.back();
-            to_ptr->bends.pop_back();
-            temp->free();
-            delete temp;
-
-        } else {
-            ++bend_to_iter;
-        }
-    }
-    // remove reverse of this bond  in to_ptr->bonds
-    std::vector<Bond*>::iterator bond_to_iter = to_ptr->bonds.begin();
-    while( bond_to_iter != to_ptr->bonds.end() ) {
-        if( (*bond_to_iter)->to_ptr == from_ptr ) {
-            Bond *temp = *bond_to_iter;
-            *bond_to_iter = to_ptr->bonds.back();
-            to_ptr->bonds.pop_back();
-            delete temp;
-        } else {
-            ++bond_to_iter;
-        }
-    }
-    // remove the bends in from_ptr->bends that depend on this bond
-    std::vector<Bend*>::iterator bend_from_iter = from_ptr->bends.begin();
-    while( bend_from_iter != from_ptr->bends.end() ) {
-        if( (*bend_from_iter)->bond_a == this or (*bend_from_iter)->bond_b == this ) {
-            Bend *temp = *bend_from_iter; 
-            *bend_from_iter = from_ptr->bends.back();
-            from_ptr->bends.pop_back(); // moves from_ptr->bends.end() back, so no ++bend_from_iter
-            temp->free();
-            delete temp; 
-        } else {
-            ++bend_from_iter;
-        }
-    }
-}
 
 // Bend
 Graph::Bend::Bend(Node *m, Bond *ba, Bond *bb, int i)
@@ -642,8 +603,6 @@ Graph::Bend::Bend(Node *m, Bond *ba, Bond *bb, int i)
 
 }
 
-Graph::Bend::~Bend()
-{ this->free(); }
 
 void Graph::Bend::free()
 {
@@ -655,12 +614,7 @@ void Graph::Bend::free()
     if( nextBend != nullptr ) {
         nextBend->prevBend = nullptr;
     }
-
-    prevBend = nullptr;
-    nextBend = nullptr;
 }
-
-
 
 Graph::Bend *Graph::Bend::findFirst()
 {
