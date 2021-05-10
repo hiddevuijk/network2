@@ -16,14 +16,14 @@ int main()
     int Nx = 20; 
     int Ny = 20;
     double Lx = 10;
-    double z = 30.;
+    double z = 2.;
     long int seed = 1234567890;
     string topologyName = "topology.dat";
     string r0Name = "r0.dat";
 
 
     Graph graph = generateGraph(Nx,Ny,Lx,z,seed,0);
-
+    cout << graph.getConnectivity2() << endl;
 
     ofstream top(topologyName);
     graph.write(top);
