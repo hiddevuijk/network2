@@ -266,11 +266,18 @@ double Graph::getConnectivity2()
     double Nnodes = 0;
     std::vector<Node*>::iterator node_iter = nodes.begin();
     while( node_iter != nodes.end() ) {
-        Nbonds += (*node_iter)->bonds.size();
-        if( (*node_iter)->bonds.size() > 0 ) ++Nnodes;
+        if( (*node_iter)->bonds.size() > 1 ) {
+			Nnodes += 1.;
+			Nbonds += (*node_iter)->bonds.size();
+		}
         ++node_iter;
     }
 
+    //while( node_iter != nodes.end() ) {
+    //    Nbonds += (*node_iter)->bonds.size();
+    //    if( (*node_iter)->bonds.size() > 0 ) Nnodes += 1.;
+    //    ++node_iter;
+    //}
    return Nbonds/(Nnodes); 
 }
 

@@ -229,11 +229,11 @@ Graph generateGraph(int Nx, int Ny, double Lx, double z, long int seed = 1234567
         graph.delBond( bonds[i][0], bonds[i][1] );
         ++i;
     }
-    //graph.removeUnconnectedNodes();
+    graph.removeUnconnectedNodes();
 
     // shake vertices
     //vec2 r;
-    //for(int ni = 0; ni < graph.get_Nn(); ++vi) {
+    //for(std::vector<Graph::Node*>::size_type ni = 0; ni < graph.Nnodes(); ++ni) {
     //    r = graph.getNodePosition(ni); 
     //    r.x += sigma*rndist();
     //    r.y += sigma*rndist();
