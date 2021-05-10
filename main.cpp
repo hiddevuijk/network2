@@ -14,7 +14,7 @@ int main()
 {
 
     int Nx = 20; 
-    int Ny = 20;
+    int Ny = Nx;
     double Lx = 10;
     double z = 3.;
     long int seed = 1234567890;

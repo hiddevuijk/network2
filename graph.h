@@ -379,6 +379,7 @@ void Graph::delNode(int i)
 {
     Node *temp = nodes[i];
     nodes[i] = nodes.back();
+	nodes[i]->i = i;
     nodes.pop_back();
     delete temp;
 }
@@ -795,6 +796,7 @@ void Graph::removeUnconnectedNodes()
         if( (*node_iter)->bonds.size() == 0 ) {
             Node *temp = *node_iter;
             *node_iter = nodes.back();
+			(*node_iter)->i = temp->i;
             nodes.pop_back();
             delete temp;
         } else {
