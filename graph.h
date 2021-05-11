@@ -67,6 +67,10 @@ private:
     int addNode(double x, double y); // ad a node with position (x,y)
     void delNode(int i);
 
+	// checks if there is only one bond, if so, delete it
+	// and prune the node it was connected to
+	void prune(int i);
+
     bool addBond(int i, int j, int xboundary = 0, int yboundary = 0); // add a bond between node i and j
     void delBond(int i, int j);
     bool checkBond(int i,int j);
@@ -92,12 +96,15 @@ private:
     void showBonds();
     void showBends();
     std::vector<Node*>::size_type Nnodes() const {return nodes.size(); }
+    std::vector<Node*>::size_type Nbonds() const;
+    std::vector<Node*>::size_type Nbends() const;
 
   private:
 
 
     bool addBond(Node *ni, Node *nj,int xboundary, int yboundary);
     void delBond(Node *ni, Node *nj);
+	void prune(Node *ni);
     bool checkBond( Node *ni, Node *nj);
 
     bool addBend(Node *mid, Node *a, Node *b);
@@ -383,6 +390,19 @@ void Graph::delNode(int i)
     nodes.pop_back();
     delete temp;
 }
+
+void Graph::prune( int i)
+{ prune( nodes[i] ); }
+
+void Graph::prune(Node* node_ptr)
+{
+	if( node_ptr->bonds.size() == 1 ) {
+		Node *to_ptr = node_ptr->bonds[0]->to_ptr;
+		delBond( node_ptr, to_ptr);
+		prune(to_ptr);
+	}
+}
+
 
 bool Graph::addBond(int ni, int nj, int xboundary, int yboundary)
 { return addBond(nodes[ni], nodes[nj], xboundary, yboundary); }
@@ -712,6 +732,33 @@ void Graph::showBends()
     }
 
 }
+
+std::vector<Graph::Bond*>::size_type Graph::Nbonds() const
+{
+	std::vector<Bond*>::size_type N = 0;
+	std::vector<Node*>::const_iterator node_iter = nodes.begin();
+	while( node_iter != nodes.end() ) {
+		N += (*node_iter)->bonds.size();
+		++node_iter;
+	}
+	// bonds are saved double, so /2
+	return N/2;
+}
+
+std::vector<Graph::Bond*>::size_type Graph::Nbends() const
+{
+	std::vector<Bend*>::size_type N = 0;
+	std::vector<Node*>::const_iterator node_iter = nodes.begin();
+	while( node_iter != nodes.end() ) {
+		N += (*node_iter)->bends.size();
+		++node_iter;
+	}
+
+	return N;
+}
+
+
+
 void Graph::setPolymers()
 {
     // delete previous info

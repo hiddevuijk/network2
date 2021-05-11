@@ -227,6 +227,8 @@ Graph generateGraph(int Nx, int Ny, double Lx, double z, long int seed = 1234567
     // edges removed by pruning are not removed from edges list!!
     while( graph.getConnectivity2() > z ) {
         graph.delBond( bonds[i][0], bonds[i][1] );
+		graph.prune( bonds[i][0]);
+		graph.prune( bonds[i][1]);
         ++i;
     }
     graph.removeUnconnectedNodes();
