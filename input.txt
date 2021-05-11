@@ -1,8 +1,8 @@
 #network parameters
-Nx = 4
-Lx = 4
+Nx = 20
+Lx = 20
 z = 3.3
-kappa = 1e-6
+kappa = 1e-4
 
 seed  = 223456789
 s = 0.01
@@ -13,8 +13,8 @@ dg = 0.005
 alpha = 1.01
 
 #minimization parameters
-e = 1e-3
-emax = 1e-3
+e = 1e-10
+emax = 1e-8
 dt0 = 0.1
 dtmax = 0.5
 dtmin = 1e-1

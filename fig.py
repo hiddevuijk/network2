@@ -21,21 +21,27 @@ dg = g[1] - g[0]
 
 sigma = np.gradient(H,g)
 K = np.gradient(sigma,g)
-dK = np.gradient(K,g)
-dK2 = np.gradient(np.log(K),np.log(g))
+#dK = np.gradient(K,g)
+#dK2 = np.gradient(np.log(K),np.log(g))
 
+#plt.scatter(g,sxx,marker="s", label="sxx")
+#plt.scatter(g,sxy,marker="^", label="sxy")
+#plt.scatter(g,syx,marker="o", label="syx")
+#plt.scatter(g,syy,marker="*", label="syy")
 
-plt.scatter(g,H, color='red', label=r"$H$")
-plt.scatter(g,sigma, color='magenta', label=r"$\sigma= \frac{d H}{d \gamma}$")
+Ksigma = np.gradient(sxy, g)
+plt.scatter(g,Ksigma)
+
+#plt.scatter(g,H, color='red', label=r"$H$")
+#plt.scatter(g,sigma, color='magenta', marker="<",label=r"$\sigma= \frac{d H}{d \gamma}$")
 plt.scatter(g,K, color='blue', label=r"$K = \frac{ d^2 H}{d\gamma^2}$")
 #plt.scatter(g,dK, color='brown', label=r"$dK $")
 #plt.scatter(g,dK2, color='orange', label=r"$\frac{ d log(K)}{d log(\gamma)} $")
 
-
 plt.yscale('log')
 plt.xscale('log')
 plt.xlim([ 0.5*dg, max(g)] )
-plt.ylim([ 1e-12, 10] )
+plt.ylim([ 1e-10, 10] )
 plt.legend();
 
 plt.xlabel(r"$\gamma$", fontsize=20)

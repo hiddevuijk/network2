@@ -69,7 +69,6 @@ int main()
 
 	double Hs, Hb;
 	vector<double> sigma(4);
-	vector<double> sigma2(4);
 	int i=0;
 
     //network.stretchXAffine(-0.05);
@@ -94,7 +93,6 @@ int main()
 		Hs = network.bondEnergy();	
 		Hb = network.bendEnergy();	
         sigma = network.stress();
-        sigma2 = network.stress2();
 		//cout << network.get_forceNorm() << endl;
 		if(i%10 == 0 ){
 			cout << gmax << "\t" << gamma << "\t" << Hs + Hb << "\t" << network.minimizer.Fnorm/ network.minimizer.N  <<
@@ -108,10 +106,10 @@ int main()
 		gEout << gamma << '\t';
 		gEout << Hs << '\t';
 		gEout << Hb << '\t';
-		gEout << sigma[0] << '\t';
-		gEout << sigma[1] << '\t';
-		gEout << sigma[2] << '\t';
-		gEout << sigma[3] << endl;
+		gEout << -1*sigma[0] << '\t';
+		gEout << -1*sigma[1] << '\t';
+		gEout << -1*sigma[2] << '\t';
+		gEout << -1*sigma[3] << endl;
 
 		dg *= alpha;
     }
