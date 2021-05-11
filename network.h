@@ -46,7 +46,6 @@ class Network
     double totalEnergy() const; 
 
 	std::vector<double> stress() const;
-	std::vector<double> stress2() const;
 
 	void dE( std::vector<double> &F, const  std::vector<double> &r) const;
 
@@ -444,100 +443,6 @@ std::vector<double> Network::stress() const
     return sigma;
 }
 
-std::vector<double> Network::stress2() const
-{
-	double sigmaXX = 0;
-	double sigmaXY = 0;
-	double sigmaYX = 0;
-	double sigmaYY = 0;
-
-	gsl_vector *dH;
-    dH = gsl_vector_alloc(2*Nv);
-    gsl_vector_scale( dH, 0); // set all elements to 0
-	
-	double xi,yi,xj,yj, xk,yk;
-    for( int ei=0; ei< get_Nedges(); ++ei ) {
-
-        get_edgeDEnergy(ei, r, dH);
-	
-		xi = gsl_vector_get(r, 2*edges[ei].i);	
-		yi = gsl_vector_get(r, 2*edges[ei].i + 1);	
-
-		xj = gsl_vector_get(r, 2*edges[ei].j);	
-		yj = gsl_vector_get(r, 2*edges[ei].j + 1);	
-	
-		sigmaXX += gsl_vector_get(dH, 2*edges[ei].i) * (xj- xi);
-		sigmaXY += gsl_vector_get(dH, 2*edges[ei].i) * (yj - yi);
-		sigmaYX += gsl_vector_get(dH, 2*edges[ei].i+1) * (xj - xi);
-		sigmaYY += gsl_vector_get(dH, 2*edges[ei].i+1) * (yj - yi);
-	
-		sigmaXX += gsl_vector_get(dH, 2*edges[ei].j) * (xi - xj);
-		sigmaXY += gsl_vector_get(dH, 2*edges[ei].j) * (yi - yj);	
-		sigmaYX += gsl_vector_get(dH, 2*edges[ei].j+1) * (xi - xj);	
-		sigmaYY += gsl_vector_get(dH, 2*edges[ei].j+1) * (yi - yj);	
-
-		gsl_vector_set(dH, 2*edges[ei].i, 0);
-		gsl_vector_set(dH, 2*edges[ei].i + 1, 0);
-		gsl_vector_set(dH, 2*edges[ei].j, 0);
-		gsl_vector_set(dH, 2*edges[ei].j + 1, 0);
-		//gsl_vector_scale( dH, 0); // set all elements to 0
-    } 
-
-	for( int bi=0; bi < get_Nbends(); ++bi) {
-		get_bendDEnergy(bi, r, dH);
-
-		xi = gsl_vector_get(r, 2*bends[bi].i);	
-		yi = gsl_vector_get(r, 2*bends[bi].i + 1);	
-
-		xj = gsl_vector_get(r, 2*bends[bi].j);	
-		yj = gsl_vector_get(r, 2*bends[bi].j + 1);	
-
-		xk = gsl_vector_get(r, 2*bends[bi].k);	
-		yk = gsl_vector_get(r, 2*bends[bi].k + 1);	
-
-	
-		sigmaXX += gsl_vector_get(dH, 2*bends[bi].i) * (xj- xi);	
-		sigmaXY += gsl_vector_get(dH, 2*bends[bi].i) * (yj - yi);	
-		sigmaYX += gsl_vector_get(dH, 2*bends[bi].i+1) * (xj - xi);	
-		sigmaYY += gsl_vector_get(dH, 2*bends[bi].i+1) * (yj - yi);	
-	
-	
-		sigmaXX += gsl_vector_get(dH, 2*bends[bi].j) * (xi- xj)/2;	
-		sigmaXY += gsl_vector_get(dH, 2*bends[bi].j) * (yi - yj)/2;	
-		sigmaYX += gsl_vector_get(dH, 2*bends[bi].j+1) * (xi - xj)/2;	
-		sigmaYY += gsl_vector_get(dH, 2*bends[bi].j+1) * (yi - yj)/2;	
-		
-		sigmaXX += gsl_vector_get(dH, 2*bends[bi].j) * (xk- xj)/2;	
-		sigmaXY += gsl_vector_get(dH, 2*bends[bi].j) * (yk - yj)/2;	
-		sigmaYX += gsl_vector_get(dH, 2*bends[bi].j+1) * (xk - xj)/2;	
-		sigmaYY += gsl_vector_get(dH, 2*bends[bi].j+1) * (yk - yj)/2;	
-		
-	
-		sigmaXX += gsl_vector_get(dH, 2*bends[bi].k) * (xj- xk);	
-		sigmaXY += gsl_vector_get(dH, 2*bends[bi].k) * (yj - yk);	
-		sigmaYX += gsl_vector_get(dH, 2*bends[bi].k+1) * (xj - xk);	
-		sigmaYY += gsl_vector_get(dH, 2*bends[bi].k+1) * (yj - yk);	
-	
-		gsl_vector_set(dH, 2*bends[bi].i, 0);
-		gsl_vector_set(dH, 2*bends[bi].i + 1, 0);
-		gsl_vector_set(dH, 2*bends[bi].j, 0);
-		gsl_vector_set(dH, 2*bends[bi].j + 1, 0);
-		gsl_vector_set(dH, 2*bends[bi].k, 0);
-		gsl_vector_set(dH, 2*bends[bi].k + 1, 0);
-		//gsl_vector_scale( dH, 0); // set all elements to 0
-	}
-
-	std::vector<double> sigma(4);
-
-	sigma[0] = sigmaXX/(2*Lx*Ly);
-	sigma[1] = sigmaXY/(2*Lx*Ly);
-	sigma[2] = sigmaYX/(2*Lx*Ly);
-	sigma[3] = sigmaYY/(2*Lx*Ly);
-
-	gsl_vector_free(dH);
-
-	return sigma;
-}
 
 void Network::dE( std::vector<double> &F, const  std::vector<double> &r) const
 {
