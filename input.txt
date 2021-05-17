@@ -1,6 +1,6 @@
 #network parameters
-Nx = 20
-Lx = 20
+Nx = 10
+Lx = 10
 z = 3.3
 kappa = 1e-4
 
@@ -13,8 +13,8 @@ dg = 0.005
 alpha = 1.01
 
 #minimization parameters
-e = 1e-10
-emax = 1e-8
+e = 1e-9
+emax = 1e-7
 dt0 = 0.1
 dtmax = 0.5
 dtmin = 1e-1

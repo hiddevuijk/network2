@@ -30,7 +30,7 @@ K = np.gradient(sigma,g)
 #plt.scatter(g,syy,marker="*", label="syy")
 
 Ksigma = np.gradient(sxy, g)
-plt.scatter(g,Ksigma)
+plt.scatter(g,Ksigma, color='red', label=r"$\frac{d \sigma_{xy}}{d \gamma}$")
 
 #plt.scatter(g,H, color='red', label=r"$H$")
 #plt.scatter(g,sigma, color='magenta', marker="<",label=r"$\sigma= \frac{d H}{d \gamma}$")
