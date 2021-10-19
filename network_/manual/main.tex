@@ -1,0 +1,58 @@
+\documentclass[pre,onecolumn]{revtex4-1}
+
+%\usepackage{imakeidx}
+%\makeindex
+
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+
+
+\usepackage[english]{babel}
+
+\usepackage{color}
+\usepackage{mathpazo}
+
+
+
+
+
+\title{Manual for Network Simulation}
+%\author{H.D. Vuijk }
+%\date{\today}
+
+
+\begin{document}
+\maketitle
+
+\section{Objects and their interdepence}
+
+\begin{itemize}
+\item Graph \\
+  \begin{tabular}{l|l}
+  $vector<Node^*>$ nodes\_ \ \ & 
+      This vector contains pointers to all
+      \emph{Node} objects in the \emph{Graph}.
+  \\
+    & The \emph{Graph} is responsible for the memory management
+      of the \emph{Nodes}.
+  \end{tabular}
+\item Node \\
+  \begin{tabular}{l|l}
+  $vector<Bond^*>$ &
+      This vector contains pointer to all \emph{Bend} objects of which
+      this \emph{Node} is the \emph{mid} \emph{Node}.
+  \\
+    & The \emph{Node} is responsible for the memory management
+      of the \emph{Bonds} in this vector.
+  \\
+    &
+  \\
+  $vector<Bend^*>$ & 
+      This vector contains pointerkkk
+  \end{tabular}
+\end{itemize}
+
+
+\end{document}
