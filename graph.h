@@ -15,7 +15,7 @@ class Graph {
 public:
     Graph();
     Graph(int Nnodes): nodes( std::vector<Node*>(Nnodes, nullptr) )
-        { for(int ni = 0; ni < Nnodes; ++ni) nodes[ni] = new Node(ni); }
+        { for (int ni = 0; ni < Nnodes; ++ni) nodes[ni] = new Node(ni); }
     ~Graph();
 
 private:
