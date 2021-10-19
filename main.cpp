@@ -21,7 +21,7 @@ int main()
 
 	int Nx 		 = config.read<int>("Nx");
     int Ny		 = Nx;
-	// assert( Ny % 2 == 0 );
+	assert( Ny % 2 == 0 ); // due to periodic boundary conditions
 
     double Lx	 = config.read<double>("Lx");
     double Ly	 = Lx*sqrt(3/4.);
