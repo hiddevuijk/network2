@@ -16,73 +16,88 @@ int main()
 {
 
 
+	// Read data from the input file
 	ConfigFile config("input.txt");
 
-	int Nx = config.read<int>("Nx");
-    int Ny = Nx;
+	int Nx 		 = config.read<int>("Nx");
+    int Ny		 = Nx;
 	// assert( Ny % 2 == 0 );
-    double Lx = config.read<double>("Lx");
-    double Ly = Lx*sqrt(3/4.);
-    double z = config.read<double>("z");
+
+    double Lx	 = config.read<double>("Lx");
+    double Ly	 = Lx*sqrt(3/4.);
+    double z	 = config.read<double>("z");
 	double kappa = config.read<double>("kappa");
-	long int seed  = config.read<long int>("seed");
-    double s = config.read<double>("s");
+	long int seed= config.read<long int>("seed");
+    double s	 = config.read<double>("s");
 	
-    double gmax = config.read<double>("gmax");
-    double dg = config.read<double>("dg");
+    double gmax	 = config.read<double>("gmax");
+    double dg	 = config.read<double>("dg");
     double gamma = 0;
 	double alpha = config.read<double>("alpha");
 
 
-	double e = config.read<double>("e");
-	double emax = config.read<double>("emax");
-    int Nmin = config.read<int>("Nmin");
-	double dt0 = config.read<double>("dt0");
+	double e 	 = config.read<double>("e");
+	double emax  = config.read<double>("emax");
+    int    Nmin	 = config.read<int>("Nmin");
+	double dt0	 = config.read<double>("dt0");
 	double dtmax = config.read<double>("dtmax");
 	double dtmin = config.read<double>("dtmin");
-	double finc = config.read<double>("finc");
-	double fdec = config.read<double>("fdec");
-    double alpha0 = config.read<double>("alpha0");
-    double falpha = config.read<double>("falpha");
-    double m = config.read<double>("m");
+	double finc  = config.read<double>("finc");
+	double fdec	 = config.read<double>("fdec");
+    double alpha0= config.read<double>("alpha0");
+    double falpha= config.read<double>("falpha");
+    double m	 = config.read<double>("m");
 
 	string topologyName = config.read<string>("topologyName");
-	string r0Name = config.read<string>("r0Name");
-	string rName = config.read<string>("rName");
-	string gammaEName = config.read<string>("gammaEName");
+	string r0Name 		= config.read<string>("r0Name");
+	string rName		= config.read<string>("rName");
+	string gammaEName 	= config.read<string>("gammaEName");
 
 
     Graph graph = generateGraph(Nx,Ny,Lx,z, seed, s);
 	Network network(graph,Lx,Ly, kappa);
 
 
+	// save the topology of the network
     ofstream top(topologyName);
     graph.write(top);
     top.close();
 
-
+	// save the initial positions on the nodes 
     ofstream out0(r0Name);
     network.savePositions(out0);
     out0.close();
 
+	// out stream for the data
 	ofstream gEout( gammaEName );
 
+	// Hs = stretching energy
+	// Hb = bending energy
 	double Hs, Hb;
+
+	// stress tensor: s_xx, s_xy, s_yx, s_yy 
 	vector<double> sigma(4);
+
+	
 	int i=0;
 
+	// deformation before stretching
     //network.stretchXAffine(-0.05);
     //network.stretchYAffine(-0.05);
     //network.minimize(e, dt0, dtmax, dtmin,finc, fdec, Nmin, alpha0, falpha,  m);
 
+	// save  data
     ofstream outc("rcompressed.dat");
     network.savePositions(outc);
     outc.close();
 
-    int NF = 0;
+    int NF = 0; // total number of force calculations
+
     while( fabs(gamma) < gmax ) {
 		
         gamma += dg;
+
+		// deform and minimize the energy
 
 		//network.shearAffine(dg);
 		//network.stretchX(dg);
@@ -94,27 +109,38 @@ int main()
 		Hb = network.bendEnergy();	
         sigma = network.stress();
 		//cout << network.get_forceNorm() << endl;
+
+		// std::out information 
 		if(i%10 == 0 ){
-			cout << gmax << "\t" << gamma << "\t" << Hs + Hb << "\t" << network.minimizer.Fnorm/ network.minimizer.N  <<
-                    "\t" << network.minimizer.Fmax() <<  "\t" << network.minimizer.NF << endl;
-            cout << "______________________________________________________________" << endl;
+			cout << gmax << "\t" 
+				 << gamma << "\t" 
+				 << Hs + Hb << "\t"
+				 << network.minimizer.Fnorm/ network.minimizer.N << "\t"
+				 << network.minimizer.Fmax() <<  "\t"
+				 << network.minimizer.NF << endl;
+            cout << "______________________________________________________" << endl;
 		}
+
 		i++;
 
         NF += network.minimizer.NF;	
 
-		gEout << gamma << '\t';
-		gEout << Hs << '\t';
-		gEout << Hb << '\t';
-		gEout << -1*sigma[0] << '\t';
-		gEout << -1*sigma[1] << '\t';
-		gEout << -1*sigma[2] << '\t';
-		gEout << -1*sigma[3] << endl;
+		// save energy and stress
+		gEout << gamma << '\t'
+		      << Hs << '\t'
+			  << tEout << Hb << '\t'
+			  << -1*sigma[0] << '\t'
+			  << -1*sigma[1] << '\t'
+			  << -1*sigma[2] << '\t'
+			  << -1*sigma[3] << endl;
 
+		// increase gamma increment s.t. gamma is logarithmic
 		dg *= alpha;
     }
+
     cout << NF << endl;
 
+	// save the final positions of the network
     ofstream out(rName);
     network.savePositions(out);
     out.close();
