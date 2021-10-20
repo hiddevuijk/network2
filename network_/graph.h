@@ -36,7 +36,7 @@ class Graph {
   // private types
   class Node;
   class Bond;
-  class Bend;
+  //class Bend;
 
   // private constants 
   // private methods
@@ -68,14 +68,14 @@ class Graph::Node {
 
   // methods
   unsigned int NBonds() const { return (unsigned int) bonds.size(); }
-  unsigned int NBends() const { return (unsigned int) bends.size(); }
+  //unsigned int NBends() const { return (unsigned int) bends.size(); }
 
   // data members
   int index;
   Vec2 position;
 
   std::vector<Bond*> bonds; // all bonds that depend on this node
-  std::vector<Bend*> bends; // all bends that depend on this node
+  //std::vector<Bend*> bends; // all bends that depend on this node
  
 };
 
@@ -110,7 +110,7 @@ class Graph::Bond {
 //    arms of the bend.
 // The next_bend and prev_bend pointers point to bend ojects along the polymer
 //    that this bend belongs to.
-
+/*
 class Graph::Bend {
  public:
   Bend(): index(-1), mid(nullptr), bond_a(nullptr), bond_b(nullptr),
@@ -165,17 +165,14 @@ void Graph::Bend::free()
   next_bend = nullptr;
 
 }
+*/
 
 // the Node destructor deletes a node, and removes and deletes
 // all bond and bend objects in the graph that are dependent on this node
 //  TO DO: discribe free 
 Graph::Node::~Node()
 {
-  for(std::vector<Bend*>::size_type i = 0; i < bends.size(); ++i) {
-    //bends[i]->free();
-    //delete bends[i];
-  }
-  bends.clear();
+    //delete bends
 
   for(std::vector<Bond*>::size_type i = 0; i < bonds.size(); ++i) {
     //bonds[i]->free();
@@ -184,7 +181,6 @@ Graph::Node::~Node()
   bonds.clear(); 
 
 }
-
 
 // constructor, assigmnent, destructor
 Graph::Graph(int number_of_nodes)
@@ -255,28 +251,6 @@ bool Graph::HasBond(int i, int j)
 // also delete all bending objects that depend on this bond
 void Graph::DelBond(int i, int j)
 {
-  Node *ni_ptr = nodes_[i];
-  Node *nj_ptr = nodes_[j];
-
-
-  // find the pointer to the bond that goes from node i to node j
-  std::vector<Bond*>::iterator bij_iter = ni_ptr->bends.begin();
-  while (bij_iter != ni_ptr->bends.end() ) {
-    if ( (*bij_iter)->to_ptr == nj_ptr ) break;
-  }
-  Bond *bij_ptr = *bij_iter;
-
-  // remove all bend objects that depend on this bond
-  bij_ptr->free();
-
-  // remove the i->j bond from the bond list of node i
-  *bij_iter = ni_ptr->bonds.back();
-  ni_ptr_ptr->pop_back();  
-
-
-
-  delete bij_ptr;
-  delete bji_ptr;
   
 }
 
