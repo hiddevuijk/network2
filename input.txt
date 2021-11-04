@@ -26,8 +26,8 @@ falpha = 0.99
 m = 1.
 
 #save data to
-topologyName = topology.dat
-r0Name = r0.dat
-rName = r.dat
-gammaEName = strain.dat
+topologyName = topology
+r0Name = r0
+rName = r
+gammaEName = strain
 

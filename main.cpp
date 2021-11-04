@@ -59,17 +59,17 @@ int main()
 
 
   // save the topology of the network
-  ofstream top(topologyName);
+  ofstream top(topologyName + ".dat");
   graph.write(top);
   top.close();
 
   // save the initial positions on the nodes 
-  ofstream out0(r0Name);
+  ofstream out0(r0Name + ".dat");
   network.savePositions(out0);
   out0.close();
 
   // out stream for the data
-  ofstream gEout(gammaEName);
+  ofstream gEout(gammaEName + ".dat");
 
   double Hs, Hb; // stretching and bending energy
 
@@ -85,9 +85,9 @@ int main()
   //network.minimize(e, dt0, dtmax, dtmin,finc, fdec, Nmin, alpha0, falpha,  m);
 
   // save  data
-  ofstream outc("rcompressed.dat");
-  network.savePositions(outc);
-  outc.close();
+  //ofstream outc("rcompressed.dat");
+  //network.savePositions(outc);
+  //outc.close();
 
   int NF = 0; // total number of force calculations
 
@@ -133,6 +133,13 @@ int main()
           << -1*sigma[2] << '\t'
           << -1*sigma[3] << endl;
 
+    ofstream out(rName + "_" + to_string(i) + ".dat");
+    network.savePositions(out);
+    out.close();
+
+   
+
+
     // increase gamma increment s.t. gamma is logarithmic
     dg *= alpha;
   }
@@ -140,7 +147,7 @@ int main()
   cout << NF << endl;
 
   // save the final positions of the network
-  ofstream out(rName);
+  ofstream out(rName + ".dat");
   network.savePositions(out);
   out.close();
 
