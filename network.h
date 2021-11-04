@@ -341,6 +341,7 @@ void Network::minimize(double e, double emax, double dt0, double dtmax,
 }
 
 
+
 std::vector<double> Network::get_positions() const
 {
   std::vector<double> positions(2*Nnode);
