@@ -24,12 +24,12 @@ class Network
   class Bend;
 
  public:
-  Network( Graph&, double Lx, double Ly, double kappa);
+  Network(Graph&, double Lx, double Ly, double kappa);
 
 
-  void minimize(double e, double emax, double dt0, double dtmax,
-                double dtmin, double finc, double fdec, int Nmin,
-                double alpha0,  double falpha, double m);
+  void minimize(double e,      double emax,   double dt0,  double dtmax,
+                double dtmin,  double finc,   double fdec, int Nmin,
+                double alpha0, double falpha, double m);
 
 	// deform Network
   void shear(double delta_gamma); 
@@ -315,7 +315,7 @@ void Network::stretchYAffine(double delta_epsilonY)
 
   // add Affine deformation
 	for(int ni=0; ni < Nnode; ++ni ) {
-		r[2*ni+1] += delta_epsilonY*r[2*ni+1];
+		r[2*ni + 1] += delta_epsilonY*r[2*ni + 1];
 	}
 
 	epsilonY += delta_epsilonY;
@@ -584,7 +584,8 @@ void Network::dE(std::vector<double> &F, const std::vector<double> &r) const
   for( int bi=0; bi < get_Nbends(); ++bi) {
     get_bendDEnergy(bi, r, F);
   }
-  for(int i=0; i<2*Nnode; ++i) F[i] *= -1;
+
+  for(int i = 0; i < 2*Nnode; ++i) F[i] *= -1;
 }
 
 
@@ -620,7 +621,8 @@ double Network::Bond::get_dyij(const std::vector<double> &r,
                                const Network *net) const
 { return r[2*i+1] - r[2*j+1] - (net->Ly)*(1+net->epsilonY)*yb; }
 
-double Network::Bond::energy(const std::vector<double> &r,const Network *net) const
+double Network::Bond::energy(const std::vector<double> &r,
+                             const Network *net) const
 {
   double g = net->gamma*net->Ly;
 	double dx = r[2*i  ] - r[2*j  ] - (net->Lx)*(1+net->epsilonX)*xb - yb*g;
@@ -632,7 +634,8 @@ double Network::Bond::energy(const std::vector<double> &r,const Network *net) co
 }
 
 void Network::Bond::dEnergy(const std::vector<double> &r,
-                            std::vector<double> &F, const Network *net) const
+                            std::vector<double> &F,
+                            const Network *net) const
 {
   double g = (net->gamma)*(net->Ly);
 	double dx = r[2*i  ] - r[2*j  ] - (net->Lx)*(1+net->epsilonX)*xb - yb*g;
@@ -790,12 +793,12 @@ void Network::Bend::dEnergy(const std::vector<double> &r,
 	double xk = r[2*k  ];
 	double yk = r[2*k+1];
 
-	double dxji = xi - xj + (net->Lx)*(1+net->epsilonX)*xib +
+	double dxji = xi - xj + (net->Lx)*(1 + net->epsilonX)*xib +
                 (net->Ly)*(net->gamma)*yib;	
-	double dyji = yi - yj + (net->Ly)*(1+net->epsilonY)*yib;
-	double dxjk = xk - xj + (net->Lx)*(1+net->epsilonX)*xkb +
+	double dyji = yi - yj + (net->Ly)*(1 + net->epsilonY)*yib;
+	double dxjk = xk - xj + (net->Lx)*(1 + net->epsilonX)*xkb +
                 (net->Ly)*(net->gamma)*ykb;
-	double dyjk = yk - yj + (net->Ly)*(1+net->epsilonY)*ykb;
+	double dyjk = yk - yj + (net->Ly)*(1 + net->epsilonY)*ykb;
 
 	double a = dyji*dxjk - dxji*dyjk;
 	double b = dxji*dxjk + dyji*dyjk;
@@ -810,8 +813,8 @@ void Network::Bend::dEnergy(const std::vector<double> &r,
 	// set F
 	F[2*i  ] += Falpha*(-A*dyjk + B*dxjk );
 	F[2*i+1] += Falpha*( A*dxjk + B*dyjk );
-	F[2*j  ] += Falpha*( A*(dyjk-dyji) - B*(dxjk+dxji) );
-	F[2*j+1] += Falpha*( A*(dxji-dxjk) - B*(dyjk+dyji) );
+	F[2*j  ] += Falpha*( A*(dyjk - dyji) - B*(dxjk + dxji) );
+	F[2*j+1] += Falpha*( A*(dxji - dxjk) - B*(dyjk + dyji) );
 	F[2*k  ] += Falpha*( A*dyji + B*dxji );
 	F[2*k+1] += Falpha*(-A*dxji + B*dyji );
 }
