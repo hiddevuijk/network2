@@ -2,6 +2,7 @@
 #include "graph.h"
 #include "generate_graph.h"
 #include "network.h"
+#include "minimize.h"
 #include "ConfigFile.h"
 
 #include <iostream>
@@ -91,6 +92,9 @@ int main()
 
   int NF = 0; // total number of force calculations
 
+  Minimizer minimizer(network, e, emax, dt0, dtmax, dtmin, finc, fdec,
+                      Nmin, alpha0, falpha, m);
+
   while (fabs(gamma) < gmax) {
 
     gamma += dg;
@@ -103,6 +107,8 @@ int main()
     network.shearAffine(dg);
     network.minimize(e, emax, dt0, dtmax, dtmin,finc, fdec,
                      Nmin, alpha0, falpha,  m);
+    //minimizer.minimize(network);
+    
 
     Hs = network.bondEnergy();	
     Hb = network.bendEnergy();	
@@ -114,9 +120,10 @@ int main()
       cout << gmax << "\t" 
            << gamma << "\t" 
            << Hs + Hb << "\t"
-           << network.minimizer.Fnorm/ network.minimizer.N << "\t"
-           << network.minimizer.Fmax() <<  "\t"
-           << network.minimizer.NF << endl;
+           << endl;
+           //<< network.minimizer.Fnorm/ network.minimizer.N << "\t"
+           //<< network.minimizer.Fmax() <<  "\t"
+           //<< network.minimizer.NF << endl;
       cout << "______________________________________________________" << endl;
     }
 
@@ -144,7 +151,7 @@ int main()
     dg *= alpha;
   }
 
-  cout << NF << endl;
+  //cout << NF << endl;
 
   // save the final positions of the network
   ofstream out(rName + ".dat");
