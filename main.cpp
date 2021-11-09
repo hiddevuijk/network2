@@ -113,8 +113,8 @@ int main()
     network.shearAffine(dg);
     //network.minimize(e, emax, dt0, dtmax, dtmin,finc, fdec,
     //                 Nmin, alpha0, falpha,  m);
-    //minimizer.minimize(network);
-    minimizerGSL.minimize(network);
+    minimizer.minimize(network);
+    //minimizerGSL.minimize(network);
     
 
     Hs = network.bondEnergy();	
