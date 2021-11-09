@@ -3,6 +3,7 @@
 #include "generate_graph.h"
 #include "network.h"
 #include "minimize.h"
+#include "minimize_gsl.h"
 #include "ConfigFile.h"
 
 #include <iostream>
@@ -95,6 +96,11 @@ int main()
   Minimizer minimizer(network, e, emax, dt0, dtmax, dtmin, finc, fdec,
                       Nmin, alpha0, falpha, m);
 
+  double eLine = 1e-9;
+  double dLine = 1e-1;
+  double err = 1e-9;
+  MinimizerGSL minimizerGSL(&network, eLine, dLine, err);
+
   while (fabs(gamma) < gmax) {
 
     gamma += dg;
@@ -105,9 +111,10 @@ int main()
     //network.stretchX(dg);
     //network.stretchY(dg);
     network.shearAffine(dg);
-    network.minimize(e, emax, dt0, dtmax, dtmin,finc, fdec,
-                     Nmin, alpha0, falpha,  m);
+    //network.minimize(e, emax, dt0, dtmax, dtmin,finc, fdec,
+    //                 Nmin, alpha0, falpha,  m);
     //minimizer.minimize(network);
+    minimizerGSL.minimize(network);
     
 
     Hs = network.bondEnergy();	

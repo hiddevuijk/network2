@@ -2,14 +2,14 @@
 Nx = 10
 Lx = 10
 z = 3.3
-kappa = 1e-4
+kappa = 1e-3
 
 seed  = 223456789
 s = 0.01
 
 #shear parameters
 gmax = 12
-dg = 0.005
+dg = 0.01
 alpha = 1.01
 
 #minimization parameters
