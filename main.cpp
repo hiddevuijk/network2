@@ -19,7 +19,7 @@ int main()
   double kappa  = 1.;
 
   Graph graph;
-  graph.addNode(0., 1.);
+  graph.addNode(1., 2.);
   graph.addNode(1., 1.);
   graph.addNode(2., 1.);
 
@@ -32,7 +32,7 @@ int main()
 
   cout << network.getBendAngle(0)/acos(-1) << endl;
 
-  network.moveNode(0, 1., 2.);
+  network.moveNode(0, 1.5, 0.);
 
   cout << network.getBendAngle(0)/acos(-1) << endl;
   cout << network.getBendDphi(0)/acos(-1) << endl;

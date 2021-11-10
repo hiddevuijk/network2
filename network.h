@@ -93,6 +93,9 @@ class Network {
   // Returns the angle of bend i
   double getBendAngle(int i) const;
 
+  void bendForce(int i, std::vector<double> &F) const;
+  void bendForce(std::vector<double> & F) const;
+
   // Replaces F with the total force on each degree of freedom.
   // The force in the x (y) directions on node i is F[2*i] (F[2*i + 1]).
   void force(std::vector<double> &F) const;
