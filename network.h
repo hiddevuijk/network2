@@ -1,834 +1,392 @@
 #ifndef GUARD_NETWORK_H
 #define GUARD_NETWORK_H
 
-/*
-to do:
-    -- write EdEnergy
+//
+// TO DO:
+// - Check definition/calculation of angles and differences of angles.
+//
 
-	-- change bend::energy_dEnergy
-*/
 
-#include "vec2.h"
 #include "graph.h"
-#include "generate_graph.h"
 
-#include "fire2.h"
-
+#include <vector>
 #include <math.h>
 
 
-class Network
-{
- private:
-  class Bond;
-  class Bend;
+class Bond {
+ public: 
+  // Bond between node i and node j.
+  int i, j;
+  // If i->j goes over the right (left) x boundary, xb=1 (xb=-1).
+  int xb, yb;
 
+  // Rest length
+  double l0;
+};
+
+class Bend {
  public:
-  Network(Graph&, double Lx, double Ly, double kappa);
+  // Bend between nodes i-j-k.
+  int i, j, k;
 
+  // If j->i goes over the right (left) x boundary, xib=1 (xib=-1).
+  // If j->i does not cross a boundary xib = 0.
+  int xib, yib;
 
-  void minimize(double e,      double emax,   double dt0,  double dtmax,
-                double dtmin,  double finc,   double fdec, int Nmin,
-                double alpha0, double falpha, double m);
+  // If j->k goes over the right (left) x boundary, xkb=1 (xkb=-1).
+  // If j->k does not cross a boundary xkb = 0.
+  int xkb, ykb;
 
-	// deform Network
-  void shear(double delta_gamma); 
-  void shearAffine(double delta_gamma); 
-  void stretchX(double delta_epsilonX); 
-  void stretchXAffine(double delta_epsilonX); 
-  void stretchY(double delta_epsilonY); 
-  void stretchYAffine(double delta_epsilonY); 
-
-  int get_Nnodes() const {return Nnode; }
-  int get_Nbonds() const { return Nbond; }
-  int get_Nbends() const { return Nbend; }
-
-  double bondEnergy() const; 
-  double bendEnergy() const; 
-  double totalEnergy() const; 
-
-	std::vector<double> stress() const;
-	std::vector<double> stress2() const;
-
-	void dE(std::vector<double> &F, const  std::vector<double> &r) const;
-
-  double get_bondEnergy(int bi, const  std::vector<double> &r) const
-         { return bonds[bi].energy(r, this); }
-
-  void get_bondDEnergy(int bi, const std::vector<double> &r,
-                       std::vector<double> &F) const
-       { bonds[bi].dEnergy(r, F, this); }
-
-  double get_bondEdE(int bi, const std::vector<double> &r,
-                     std::vector<double> &F) const
-         { return bonds[bi].energy_dEnergy(r, F, this); }
-
-	double get_bendEnergy(int bi, const  std::vector<double> &r) const
-         { return bends[bi].energy(r, this); }
-
-	void get_bendDEnergy(int bi, const std::vector<double> &r,
-                       std::vector<double> &F) const
-       { bends[bi].dEnergy(r, F, this); }
-
-	double get_bendEdE(int bi, const  std::vector<double> &r,
-                     std::vector<double> &F) const 
-         { return bends[bi].energy_dEnergy(r , F, this); }
-
-	double get_bend_dxij( int bi, const std::vector<double>& r) const
-		     { return bends[bi].get_dxij(r,this); }
-	double get_bend_dyij( int bi, const std::vector<double>& r) const
-         { return bends[bi].get_dyij(r,this); }
-	double get_bend_dxkj( int bi, const std::vector<double>& r) const
-         { return bends[bi].get_dxkj(r,this); }
-	double get_bend_dykj( int bi, const std::vector<double>& r) const
-		     { return bends[bi].get_dykj(r,this); }
-
-	double get_bond_dxij( int bi, const std::vector<double>& r) const
-		     { return bonds[bi].get_dxij(r,this); }
-	double get_bond_dyij( int bi, const std::vector<double>& r) const
-		     { return bonds[bi].get_dyij(r,this); }
-
-
-	double get_forceNorm() const;
-
-  std::vector<double> get_positions() const;
-  void savePositions(std::ostream& out) const;
-
-  void set_Lx(double Lxx);
-  void set_Ly(double Lyy);
-
- private:
-  class Bond{
-    public:
-      int i,j; 
-      int xb, yb;
-      double l0; 
-
-      double get_l(const  std::vector<double> &r, const Network *net) const;
-
-      // return xi - xj with PBC
-      double get_dxij(const std::vector<double> &r, const Network *net) const;
-      double get_dyij(const std::vector<double> &r, const Network *net) const;
-
-      void set_l0(const std::vector<double> &r, const Network *net)
-           { l0 = get_l(r,net); }
-      void set_l0(double l00) { l0 = l00; }
-
-      double energy(const std::vector<double> &r, const Network *net) const;
-      void dEnergy(const std::vector<double> &r,
-                   std::vector<double> &F, const Network *net) const;
-      double energy_dEnergy(const std::vector<double> &r,
-                            std::vector<double> &F, const Network *net) const;
-  };
-
-  class Bend{
-   public:
-	  int i,j,k;
-		int xib, yib;
-		int xkb, ykb;
-
-		double kappa;
-		double phi0;
-
-		//  return xi - xj with PBC
-		double get_dxij(const std::vector<double> &r, const Network *net) const;
-		double get_dyij(const std::vector<double> &r, const Network *net) const;
-		double get_dxkj(const std::vector<double> &r, const Network *net) const;
-		double get_dykj(const std::vector<double> &r, const Network *net) const;
-
-		double get_lji(const std::vector<double> &r, const Network *net) const;
-		double get_ljk(const std::vector<double> &r, const Network *net) const;
-		double get_phi(const std::vector<double> &r, const Network *net) const;
-
-		void set_phi0(const std::vector<double> &r, const Network *net);
-	
-
-		double energy(const  std::vector<double> &r, const Network *net) const;
-		void dEnergy (const std::vector<double> &r,  std::vector<double> &F,
-                  const Network *net) const;
-		double energy_dEnergy(const std::vector<double> &r, std::vector<double> &F,
-                          const Network *net) const;
-  };
-
-
- public: // remove
-  void set_kappa();
-	void set_phi0();
-	void set_l0();
-	void set_l0(double l00);
-
-	double get_phi(int bi) const { return bends[bi].get_phi(r,this); };
-	
-  int Nnode,Nbond,Nbend;
-  double Lx, Ly;
-
-  double gamma;  // shear deformation
-	double epsilonX; // bulk deformation in x
-	double epsilonY; // bulk deformation in y
-
-	Fire<Network> minimizer;
-
-  std::vector<double> r;
-  std::vector<Bond> bonds;
-  std::vector<Bend> bends;
+  // Rest angle of the bend. The angle is defined as the clockwise rotation
+  // of the vector j->i to the vector j->k.
+  double phi0;
+  // Bending constant
   double kappa;
 };
 
-///////////////////////////////
-// Network Member Functions  //
-///////////////////////////////
+class Network {
+ public:
+  Network(Graph &graph, double Lx, double Ly, double kappa);
 
-Network::Network(Graph& g, double Lxx, double Lyy, double kappaa)
-: Nnode(g.Nnodes()), Nbond(g.Nbonds()), Nbend(g.Nbends()),
-	Lx(Lxx), Ly(Lyy), gamma(0), epsilonX(0), epsilonY(0),
-	minimizer(2*Nnode, this), r(2*Nnode)
+  int getNumberOfNodes() const { return number_of_nodes_; }
+  int getNumberOfBonds() const { return number_of_bonds_; }
+  int getNumberOfBends() const { return number_of_bends_; }
+
+  void shear(double delta_gamma) { gamma_ += delta_gamma; }
+  // Increments gamma and performs affine shear deformation.
+  void shearAffine(double delta_gamma);
+
+  void stretchX(double delta_epsilon_x) { epsilon_x_ += delta_epsilon_x; }
+  // Increments epsilon_x_ and perform affine deformation of positions_.
+  void stretchXAffine(double delta_epsilon_x);
+
+  void stretchY(double delta_epsilon_y) { epsilon_y_ += delta_epsilon_y; }
+  // Increments epsilon_y_ and perform affine deformation of positions_.
+  void stretchYAffine(double delta_epsilon_y);
+
+  // Sets rest length such that current positions correspond to the rest length.
+  void resetRestLength();
+  // Sets rest angle such that the current positions correspond to the rest
+  // angle.
+  void resetRestAngle();
+  // Sets kappa of each bend object to kappa * (lij + lkj)/2, where lij and 
+  // lkj are the arm lengths.
+  void resetKappa(double kappa);
+
+  // Returns the sum of energies stored in all bonds.
+  double getBondEnergy() const;
+  // Returns the sum of energies stored in all bends.
+  double getBendEnergy() const;
+  // Returns the sum of the previous two functions.
+  double getTotalEnergy() const;
+
+  void moveNode(int i, double x, double y)
+  { positions_[2*i] = x; positions_[2*i+1] = y; }
+
+  // Adds bond force of bond i to F.
+  // The force in the x (y) directions on node i is F[2*i] (F[2*i + 1]).
+  void bondForce(int i, std::vector<double> &F) const;    
+  // Adds all bond forces to F.
+  // The force in the x (y) directions on node i is F[2*i] (F[2*i + 1]).
+  void bondForce(std::vector<double> &F) const;    
+
+  // Returns the angle of bend i
+  double getBendAngle(int i) const;
+
+  // Replaces F with the total force on each degree of freedom.
+  // The force in the x (y) directions on node i is F[2*i] (F[2*i + 1]).
+  void force(std::vector<double> &F) const;
+  // Returns the  total force on each degree of freedom.
+  std::vector<double> getForce() const;
+
+  std::vector<double> getPositions() const { return positions_; }
+
+ //private:
+  // Returns the distance between node i and j of bond bi
+  double getBondDistance(int bi) const;
+  double getBondEnergy(int i) const;
+
+  // Returns the distance between node i and j of bend bi
+  double getBendDistanceji(int bi) const;
+  // Returns the distance between node k and j of bend bi
+  double getBendDistancejk(int i) const;
+  double getBendDphi(int i) const;
+  double getBendEnergy(int i) const;
+
+  // Strain
+  double gamma_;
+  double epsilon_x_;
+  double epsilon_y_;
+ 
+  // Positions of the nodes.
+  // The x and y position of node i are positions_[ 2*i ] and 
+  // positions_[ 2*i + 1].
+  std::vector<double> positions_;
+
+  // x and y size of the system
+  const double length_x_, length_y_;
+
+  const int number_of_nodes_;
+  const int number_of_bonds_;
+  const int number_of_bends_;
+
+  // bonds_ and bends_ are constant after the constructor is called.
+  std::vector<Bond> bonds_;
+  std::vector<Bend> bends_;
+
+};
+
+
+Network::Network(Graph &graph, double length_x, double length_y, double kappa)
+  : gamma_(0), epsilon_x_(0), epsilon_y_(0), positions_(2*graph.Nnodes()),
+    length_x_(length_x), length_y_(length_y), number_of_nodes_(graph.Nnodes()),
+    number_of_bonds_(graph.Nbonds()), number_of_bends_(graph.Nbends()),
+    bonds_(number_of_bonds_), bends_(number_of_bends_)
 {
-    
-  for(int ni=0; ni<Nnode; ++ni ) {
-    vec2 p = g.getNodePosition(ni);
-    r[2*ni]     = p.x;		
-    r[2*ni + 1] = p.y;		
+
+  // Store the positions, bonds and bends infromation from the graph
+  // in the positions_, bonds_ and bends_ vector.
+  // For the return objects, see graph.h.
+
+
+  for (int ni = 0; ni < number_of_nodes_; ++ni) {
+    vec2 r = graph.getNodePosition(ni);
+    positions_[2*ni]     = r.x;
+    positions_[2*ni + 1] = r.y;
   }
 
-  std::vector<std::vector<int> > bo = g.getBonds();
-  Nbond = bo.size();
-  bonds = std::vector<Bond>(Nbond);
-  for(int bi=0; bi< Nbond; ++bi ) {
-    bonds[bi].i  = bo[bi][0]; 
-    bonds[bi].j  = bo[bi][1]; 
-    bonds[bi].xb = bo[bi][2]; 
-    bonds[bi].yb = bo[bi][3]; 
-    //bonds[bi].l0 = bo[bi][4]; 
-  }
-
-  std::vector<std::vector<int> > be = g.getBends();
-	Nbend = be.size();
-	bends = std::vector<Bend>(Nbend);
-	for(int bi=0; bi < Nbend; ++bi ){
-    bends[bi].j   = be[bi][0];
-		bends[bi].i   = be[bi][1];
-		bends[bi].xib = be[bi][2];
-		bends[bi].yib = be[bi][3];
-
-		bends[bi].k   = be[bi][4];
-		bends[bi].xkb = be[bi][5];
-		bends[bi].ykb = be[bi][6];
-	}
-
-	kappa = kappaa;
-	set_kappa();
-
-	gamma = 0;
-	epsilonX = 0;
-	epsilonY = 0;
-
-	set_phi0();
-	set_l0();
-	
-}
-
-double Network::get_forceNorm() const
-{    
-	std::vector<double> f(2*Nnode, 0.0);
-
-  for( int bi=0; bi< Nbond; ++bi ) {
-    get_bondDEnergy(bi, r, f);
+  std::vector<std::vector<int> > graph_bonds = graph.getBonds();
+  for (int bi = 0; bi < number_of_bonds_; ++bi) {
+    bonds_[bi].i  = graph_bonds[bi][0];
+    bonds_[bi].j  = graph_bonds[bi][1];
+    bonds_[bi].xb = graph_bonds[bi][2];
+    bonds_[bi].yb = graph_bonds[bi][3];
   } 
 
 
-  for( int bi=0; bi < Nbend; ++bi) {
-    get_bendDEnergy(bi, r, f);
+  // Note:
+  // The -1 in xib and yib are because in the graph they are defined 
+  // as the crossing of the boundary from i to j, in the network (here)
+  // they are defined as the crossing of the boundary from j to i.
+
+  std::vector<std::vector<int> > graph_bends = graph.getBends();
+  for (int bi = 0; bi < number_of_bends_; ++bi) {
+    bends_[bi].j   = graph_bends[bi][0];
+    bends_[bi].i   = graph_bends[bi][1];
+    bends_[bi].xib = -1*graph_bends[bi][2];
+    bends_[bi].yib = -1*graph_bends[bi][3];
+    bends_[bi].k   = graph_bends[bi][4];
+    bends_[bi].xkb = graph_bends[bi][5];
+    bends_[bi].ykb = graph_bends[bi][6];
+    bends_[bi].kappa = kappa;
   }
 
-	double norm = 0;
-	for(int ni=0; ni<2*Nnode; ++ ni) {
-		norm += f[ni]*f[ni];
-	}
-		
-	return norm;
-}
-
-void Network::set_kappa()
-{
-	double lji, ljk;
-	for( int bi=0; bi< Nbend; ++bi ) {
-		lji = bends[bi].get_lji(r,this);
-		ljk = bends[bi].get_ljk(r,this);
-		//bends[bi].kappa = kappa*(
-    //       bends[bi].get_lji(r, this) + bends[bi].get_ljk(r, this) ) / 2;
-		bends[bi].kappa = kappa*(lji + ljk) / 2;
-	}
-}
-
-void Network::set_phi0()
-{
-  for(unsigned int bi = 0; bi < bends.size(); ++bi) {
-    bends[bi].set_phi0(r,this);
-  }
-}
-
-void Network::set_l0()
-{
-	for(unsigned int bi=0; bi<bonds.size(); ++bi) {
-		bonds[bi].set_l0(r,this);
-	}
-}
-
-void Network::set_l0(double l00)
-{
-	for(unsigned int bi=0; bi<bonds.size(); ++bi) {
-		bonds[bi].set_l0(l00);
-	}
+  resetRestLength();
+  resetRestAngle();
+  resetKappa(kappa);
 }
 
 void Network::shearAffine(double delta_gamma)
 {
-  gamma += delta_gamma;
-  //affine deformation
-  for( int ni=0; ni<Nnode; ++ni ) {
-    r[2*ni] += delta_gamma*r[2*ni+1];
+  gamma_ += delta_gamma;
+  for (int i = 0; i < number_of_nodes_; ++i) {
+    positions_[2*i] += delta_gamma * positions_[2*i + 1];
+  }
+}
+
+void Network::stretchXAffine(double delta_epsilon_x)
+{
+  epsilon_x_ += delta_epsilon_x;
+  for (int i = 0; i < number_of_nodes_; ++i) {
+    positions_[2*i] += delta_epsilon_x * positions_[2*i];
+  }
+}
+
+void Network::stretchYAffine(double delta_epsilon_y)
+{
+  epsilon_y_ += delta_epsilon_y;
+  for (int i = 0; i < number_of_nodes_; ++i) {
+    positions_[2*i + 1] += delta_epsilon_y * positions_[2*i + 1];
+  }
+}
+
+ 
+void Network::resetRestLength()
+{
+  for (int i = 0; i < number_of_bonds_; ++i) {
+    bonds_[i].l0 = getBondDistance(i); 
+  }
+}
+
+void Network::resetRestAngle()
+{
+  for (int i = 0; i < number_of_bends_; ++i) {
+    bends_[i].phi0 = getBendAngle(i);
+  }
+}
+
+void Network::resetKappa(double kappa)
+{
+  double lji, ljk;
+  for (int i = 0; i < number_of_bends_; ++i) {
+    lji = getBendDistanceji(i);
+    ljk = getBendDistancejk(i);
+    bends_[i].kappa = kappa*(lji + ljk)/2;
+  }
+}
+
+double Network::getBondEnergy() const
+{
+  double energy = 0;   
+  for (int i = 0; i < number_of_bonds_; ++i) {
+    energy += getBondEnergy(i);
+  }
+  return energy;
+}
+
+//////////////////////////////
+//
+// private member functions
+//
+/////////////////////////////
+
+double Network::getBondDistance(int i) const
+{
+  // dx = xi - xj + "periodic bc"
+  double dx = positions_[2*bonds_[i].i] - positions_[2*bonds_[i].j]
+              - bonds_[i].xb * length_x_ * (1 + epsilon_x_)
+              - bonds_[i].yb * length_y_ * gamma_;
+
+  double dy = positions_[2*bonds_[i].i + 1] - positions_[2*bonds_[i].j + 1]
+              - bonds_[i].yb * length_y_ * (1 + epsilon_y_);
+
+  return sqrt(dx*dx + dy*dy);
+}
+
+double Network::getBondEnergy(int i) const
+{
+  double d = bonds_[i].l0 - getBondDistance(i);
+  return d*d/2;
+}
+
+double Network::getBendDistanceji(int i) const
+{
+  // dxij = xi + "PBC" - xj 
+  double dxij = positions_[2*bends_[i].i]
+                + bends_[i].xib * length_x_ * (1 + epsilon_x_)
+                + bends_[i].yib * length_y_ * gamma_
+                - positions_[2*bends_[i].j];
+
+  double dyij = positions_[2*bends_[i].i + 1]
+                + bends_[i].yib * length_y_ * (1 + epsilon_y_)
+                - positions_[2*bends_[i].j + 1];
+
+  return sqrt(dxij * dxij + dyij * dyij);
+}
+
+double Network::getBendDistancejk(int i) const
+{
+  // dxkj = xk + "PBC" - xj 
+  double dxkj = positions_[2*bends_[i].k]
+                + bends_[i].xkb * length_x_ * (1 + epsilon_x_)
+                + bends_[i].ykb * length_y_ * gamma_
+                - positions_[2*bends_[i].j];
+
+  double dykj = positions_[2*bends_[i].k + 1] 
+                + bends_[i].ykb * length_y_ * (1 + epsilon_y_)
+                - positions_[2*bends_[i].j + 1];
+
+  return sqrt(dxkj * dxkj + dykj * dykj);
+}
+
+double Network::getBendDphi(int i) const
+{
+  return getBendAngle(i) - bends_[i].phi0;
+}
+  
+double Network::getBendEnergy(int i) const
+{
+  double delta_phi = getBendAngle(i) - bends_[i].phi0;
+  return bends_[i].kappa * delta_phi * delta_phi / 2;
+}
+
+void Network::bondForce(int i, std::vector<double> &F) const
+{
+  // dxij = xi - xj + "PBC"
+  double dxij = positions_[2*bonds_[i].i] - positions_[2*bonds_[i].j]
+                + bonds_[i].xb * length_x_ * (1 + epsilon_x_)
+                + bonds_[i].yb * length_y_ * gamma_;
+
+  double dyij = positions_[2*bonds_[i].i + 1] - positions_[2*bonds_[i].j + 1]
+                + bonds_[i].yb * length_y_ * (1 + epsilon_y_); 
+
+  // f = l0/l - 1
+  double f = bonds_[i].l0/sqrt( dxij*dxij + dyij*dyij ) - 1;
+
+
+  // F[xi] = (l0/l - 1 ) * (xi - xj)
+  F[2*bonds_[i].i] += f * dxij;
+  F[2*bonds_[i].j] -= f * dxij;
+
+  F[2*bonds_[i].i + 1] += f * dyij;
+  F[2*bonds_[i].j + 1] -= f * dyij;
+
+}
+void Network::bondForce(std::vector<double> &F) const
+{
+  for (int i = 0; i < number_of_bonds_; ++i) {
+    bondForce(i, F);
   }
 }
 
 
-void Network::shear(double delta_gamma)
-{ gamma += delta_gamma; }
-
-void Network::stretchX(double delta_epsilonX )
-{ epsilonX += delta_epsilonX; }
-
-void Network::stretchXAffine(double delta_epsilonX)
+double Network::getBendAngle(int i) const
 {
-	// add Affine deformation
-	for( int ni = 0; ni < Nnode ; ++ni) { 
-		r[2*ni] += delta_epsilonX*r[2*ni];
-	}
-	epsilonX += delta_epsilonX;
-}
+  double xi = positions_[2*bends_[i].i]
+              + bends_[i].xib * length_x_ * (1 + epsilon_x_)
+              + bends_[i].yib * length_y_ * gamma_;
+  double yi = positions_[2*bends_[i].i + 1]
+              + bends_[i].yib * length_y_ * (1 + epsilon_y_);
 
-void Network::stretchY(double delta_epsilonY)
-{ epsilonY += delta_epsilonY; }
+  double xj = positions_[2*bends_[i].j];
+  double yj = positions_[2*bends_[i].j + 1];
 
+  double xk = positions_[2*bends_[i].k]
+              + bends_[i].xkb * length_x_ * (1 + epsilon_x_)
+              + bends_[i].ykb * length_y_ * gamma_;
+  double yk = positions_[2*bends_[i].k + 1]
+              + bends_[i].ykb * length_y_ * (1 + epsilon_y_);
 
-void Network::stretchYAffine(double delta_epsilonY)
-{
+  double dxji = xi - xj;
+  double dyji = yi - yj;
 
-  // add Affine deformation
-	for(int ni=0; ni < Nnode; ++ni ) {
-		r[2*ni + 1] += delta_epsilonY*r[2*ni + 1];
-	}
+  double dxjk = xk - xj;
+  double dyjk = yk - yj;
 
-	epsilonY += delta_epsilonY;
-}
-void Network::minimize(double e, double emax, double dt0, double dtmax,
-                       double dtmin, double finc, double fdec, int Nmin,
-                       double alpha0, double falpha, double m)
-{
-	minimizer.error = e;
-	minimizer.error_max = emax;
-	minimizer.dt0 = dt0;
-	minimizer.dtmax = dtmax;
-  minimizer.dtmin = dtmin;
-  minimizer.finc = finc;
-  minimizer.fdec = fdec;
-  minimizer.Nmin = Nmin;
-  minimizer.alpha0 = alpha0;
-  minimizer.falpha = falpha;
-	minimizer.m = m;
+  double a = dyji * dxjk - dxji * dyjk;
+  double b = dxji * dxjk + dyji * dyjk;
+  double phi = std::atan2(a, b);
+  if (phi < 0) phi += 2 * std::acos(-1);
 
-	minimizer.minimizeVV(r);
-	r = minimizer.x;
+  return phi;
 }
 
 
-
-std::vector<double> Network::get_positions() const
+void Network::force(std::vector<double> &F) const 
 {
-  std::vector<double> positions(2*Nnode);
-  for(int i=0; i<2*Nnode; ++i) {
-    positions[i] = r[i];
-  }
-
-    return positions;
+  std::fill(F.begin(),F.end(), 0.0);
+  bondForce(F);
+  // bendForce
 }
 
-void Network::savePositions(std::ostream& out) const
+std::vector<double> Network::getForce() const 
 {
-  for(int i=0; i<Nnode; ++i) {
-    out << r[2*i] << '\t' << r[2*i+1] << '\n';
-  }
+  std::vector<double> F(2 * number_of_nodes_, 0.0);
+  bondForce(F);
+  // bendForce(F);
+
+  return F;
 }
-
-
-double Network::bondEnergy() const
-{
-	double e = 0;
-  for(int bi=0; bi<Nbond; ++bi) {
-    e += get_bondEnergy(bi,r);
-  }
-	return e/(Lx*Ly);
-}
-
-double Network::bendEnergy() const
-{
-  double e = 0;
-  for(int bi=0; bi<Nbend; ++bi) {
-		e += get_bendEnergy(bi,r);
-	}
-  return e/(Lx*Ly);
-}
-
-double Network::totalEnergy() const
-{
-  double e = 0;
-  for(int bi=0; bi<Nbond; ++bi) {
-    e += get_bondEnergy(bi,r);
-  }
-  for(int bi=0; bi<Nbend; ++bi) {
-    e += get_bendEnergy(bi,r);
-  }
-  return e/(Lx*Ly);
-}
-
-std::vector<double> Network::stress() const
-{
-  double sigmaXX = 0;
-  double sigmaXY = 0;
-  double sigmaYX = 0;
-  double sigmaYY = 0;
-
-  std::vector<double> dH(2*Nnode, 0.0);
-
-  double dxij, dxji, dyij, dyji, dxkj, dxjk, dykj, dyjk;
-  int i, j, k;
-
-  for( int bi=0; bi<get_Nbonds(); ++bi) {
-    get_bondDEnergy(bi, r, dH);
-    dxij = get_bond_dxij(bi,r);
-    dyij = get_bond_dyij(bi,r);
-    dxji = - dxij;
-    dyji = - dyij;
-
-    i = 2*bonds[bi].i;
-    j = 2*bonds[bi].j;
-
-    sigmaXX += dH[i  ] * dxji;
-    sigmaXY += dH[i  ] * dyji;
-    sigmaYX += dH[i+1] * dxji;
-    sigmaYY += dH[i+1] * dyji;
-
-    sigmaXX += dH[j  ] * dxij;
-    sigmaXY += dH[j  ] * dyij;
-    sigmaYX += dH[j+1] * dxij;
-    sigmaYY += dH[j+1] * dyij;
-
-    dH[i  ] = 0;
-    dH[i+1] = 0;
-    dH[j  ] = 0;
-    dH[j+1] = 0;
-  }
-
-  for(int bi = 0; bi < get_Nbends(); ++bi) {
-    get_bendDEnergy(bi, r, dH);
-    dxij = get_bend_dxij(bi,r);
-    dyij = get_bend_dyij(bi,r);
-    dxkj = get_bend_dxkj(bi,r);
-    dykj = get_bend_dykj(bi,r);
-    dxji = -dxij;
-    dyji = -dyij;
-    dxjk = -dxkj;
-    dyjk = -dykj;
-
-    i = 2*bends[bi].i;
-    j = 2*bends[bi].j;
-    k = 2*bends[bi].k;
-
-    sigmaXX += dH[i  ] * dxji;
-    sigmaXY += dH[i  ] * dyji;
-    sigmaYX += dH[i+1] * dxji;
-    sigmaYY += dH[i+1] * dyji;
-
-    sigmaXX += dH[j  ] * dxij;
-    sigmaXY += dH[j  ] * dyij;
-    sigmaYX += dH[j+1] * dxij;
-    sigmaYY += dH[j+1] * dyij;
-
-    sigmaXX += dH[j  ] * dxkj;
-    sigmaXY += dH[j  ] * dykj;
-    sigmaYX += dH[j+1] * dxkj;
-    sigmaYY += dH[j+1] * dykj;
-
-    sigmaXX += dH[k  ] * dxjk;
-    sigmaXY += dH[k  ] * dyjk;
-    sigmaYX += dH[k+1] * dxjk;
-    sigmaYY += dH[k+1] * dyjk;
-
-    dH[i  ] = 0;
-    dH[i+1] = 0;
-    dH[j  ] = 0;
-    dH[j+1] = 0;
-    dH[k  ] = 0;
-    dH[k+1] = 0;
-  } 
-
-
-  std::vector<double> sigma(4,0);
-  sigma[0] = sigmaXX/(2*Lx*Ly);
-  sigma[1] = sigmaXY/(2*Lx*Ly);
-  sigma[2] = sigmaYX/(2*Lx*Ly);
-  sigma[3] = sigmaYY/(2*Lx*Ly);
-
-  return sigma;
-}
-std::vector<double> Network::stress2() const
-{
-  double sigmaXX = 0;
-  double sigmaXY = 0;
-  double sigmaYX = 0;
-  double sigmaYY = 0;
-
-  std::vector<double> dH(2*Nnode, 0.0);
-
-  double xi, yi, xj,yj,xk,yk;
-  int i, j, k;
-
-  for(int bi = 0; bi < get_Nbonds(); ++bi) {
-    get_bondDEnergy(bi, r, dH);
-
-    i = 2*bonds[bi].i;
-    j = 2*bonds[bi].j;
-
-    xi = r[i  ];
-    yi = r[i+1];
-    xj = r[j  ];
-    yj = r[j+1];
-
-    sigmaXX += dH[i  ] * (xj - xi);
-    sigmaXY += dH[i  ] * (yj - yi);
-    sigmaYX += dH[i+1] * (xj - xi);
-    sigmaYY += dH[i+1] * (yj - yi);
-
-    sigmaXX += dH[j  ] * (xi - xj);
-    sigmaXY += dH[j  ] * (yi - yj);
-    sigmaYX += dH[j+1] * (xi - xj);
-    sigmaYY += dH[j+1] * (yi - yj);
-
-    dH[i  ] = 0;
-    dH[i+1] = 0;
-    dH[j  ] = 0;
-    dH[j+1] = 0;
-  }
-
-  for(int bi =0;bi< get_Nbends(); ++bi) {
-    get_bendDEnergy(bi, r, dH);
-
-    i = 2*bends[bi].i;
-    j = 2*bends[bi].j;
-    k = 2*bends[bi].k;
-
-    xi = r[i  ];
-    yi = r[i+1];
-    xj = r[j  ];
-    yj = r[j+1];
-    xk = r[k  ];
-    yk = r[k+1];
-
-    sigmaXX += dH[i  ] * (xj - xi);
-    sigmaXY += dH[i  ] * (yj - yi);
-    sigmaYX += dH[i+1] * (xj - xi);
-    sigmaYY += dH[i+1] * (yj - yi);
-
-    sigmaXX += dH[j  ] * (xi - xj);
-    sigmaXY += dH[j  ] * (yi - yj);
-    sigmaYX += dH[j+1] * (xi - xj);
-    sigmaYY += dH[j+1] * (yi - yj);
-
-    sigmaXX += dH[j  ] * (xk - xj);
-    sigmaXY += dH[j  ] * (yk - yj);
-    sigmaYX += dH[j+1] * (xk - xj);
-    sigmaYY += dH[j+1] * (yk - yj);
-
-    sigmaXX += dH[k  ] * (xj - xk);
-    sigmaXY += dH[k  ] * (yj - yk);
-    sigmaYX += dH[k+1] * (xj - xk);
-    sigmaYY += dH[k+1] * (yj - yk);
-
-
-
-    dH[i  ] = 0;
-    dH[i+1] = 0;
-    dH[j  ] = 0;
-    dH[j+1] = 0;
-    dH[k  ] = 0;
-    dH[k+1] = 0;
-  } 
-
-
-  std::vector<double> sigma(4,0);
-  sigma[0] = sigmaXX/(2*Lx*Ly);
-  sigma[1] = sigmaXY/(2*Lx*Ly);
-  sigma[2] = sigmaYX/(2*Lx*Ly);
-  sigma[3] = sigmaYY/(2*Lx*Ly);
-
-  return sigma;
-}
-
-
-void Network::dE(std::vector<double> &F, const std::vector<double> &r) const
-{
-  std::fill(F.begin(), F.end(), 0.0); // set all elements to 0
-  for( int bi=0; bi< get_Nbonds(); ++bi ) {
-    get_bondDEnergy(bi, r, F);
-  } 
-
-  for( int bi=0; bi < get_Nbends(); ++bi) {
-    get_bendDEnergy(bi, r, F);
-  }
-
-  for(int i = 0; i < 2*Nnode; ++i) F[i] *= -1;
-}
-
-
-void Network::set_Lx(double Lxx)
-{ Lx = Lxx; }
-
-void Network::set_Ly(double Lyy)
-{ Ly = Lyy; }
-
-
-
-///////////////////////////
-// Bond Member functions //
-///////////////////////////
-
-double Network::Bond::get_l(const std::vector<double> &r,
-                            const Network *net) const
-{
-  double g = net->gamma*net->Ly;
-	double dx = r[2*i  ] - r[2*j  ] - (net->Lx)*(1+net->epsilonX)*xb - yb*g;
-	double dy = r[2*i+1] - r[2*j+1] - (net->Ly)*(1+net->epsilonY)*yb;
-  return std::sqrt( dx*dx + dy*dy);
-}
-
-double Network::Bond::get_dxij(const std::vector<double> &r,
-                               const Network *net) const
-{
-  double g = net->gamma*net->Ly;
-	return r[2*i] - r[2*j] - (net->Lx)*(1+net->epsilonX)*xb - yb*g;
-}
-
-double Network::Bond::get_dyij(const std::vector<double> &r,
-                               const Network *net) const
-{ return r[2*i+1] - r[2*j+1] - (net->Ly)*(1+net->epsilonY)*yb; }
-
-double Network::Bond::energy(const std::vector<double> &r,
-                             const Network *net) const
-{
-  double g = net->gamma*net->Ly;
-	double dx = r[2*i  ] - r[2*j  ] - (net->Lx)*(1+net->epsilonX)*xb - yb*g;
-	double dy = r[2*i+1] - r[2*j+1] - (net->Ly)*(1+net->epsilonY)*yb;
-
-  double l = std::sqrt( dx*dx + dy*dy);
-  l -= l0;
-  return 0.5*l*l;
-}
-
-void Network::Bond::dEnergy(const std::vector<double> &r,
-                            std::vector<double> &F,
-                            const Network *net) const
-{
-  double g = (net->gamma)*(net->Ly);
-	double dx = r[2*i  ] - r[2*j  ] - (net->Lx)*(1+net->epsilonX)*xb - yb*g;
-	double dy = r[2*i+1] - r[2*j+1] - (net->Ly)*(1+net->epsilonY)*yb;
-  double l = std::sqrt( dx*dx + dy*dy);
-	
-  dx *= 1-l0/l;
-  dy *= 1-l0/l;
-
-	F[2*i  ] += dx;
-	F[2*j  ] -= dx;
-	F[2*i+1] += dy;
-	F[2*j+1] -= dy;
-}
-
-double Network::Bond::energy_dEnergy(const std::vector<double> &r,
-                                     std::vector<double> &F,
-                                     const Network *net) const
-{
-  double g = (net->gamma)*(net->Ly);
-	double dx = r[2*i  ] - r[2*j  ] - (net->Lx)*(1+net->epsilonX)*xb - yb*g;
-	double dy = r[2*i+1] - r[2*j+1] - (net->Ly)*(1+net->epsilonY)*yb;
-  double l = std::sqrt(dx*dx + dy*dy);
-
-  dx *= 1-l0/l;
-  dy *= 1-l0/l;
-
-	F[2*i  ] += dx;
-	F[2*j  ] -= dx;
-	F[2*i+1] += dy;
-	F[2*j+1] -= dy;
-
-  l -= l0;
-  return 0.5*l*l;
-}
-
-
-///////////////////////////
-// Bend Member Functions //
-///////////////////////////
-
-double Network::Bend::get_dxij(const std::vector<double> &r,
-                               const Network *net) const
-{
-	double xi = r[2*i];
-	double xj = r[2*j];
-	return xi - xj + (net->Lx)*(1+net->epsilonX)*xib + (net->Ly)*(net->gamma)*yib;
-}
-
-double Network::Bend::get_dyij(const std::vector<double> &r,
-                               const Network *net) const
-{
-	double yi = r[2*i+1];
-	double yj = r[2*j+1];
-	return yi - yj + (net->Ly)*(1+net->epsilonY)*yib;
-}
-
-
-double Network::Bend::get_dxkj(const std::vector<double> &r,
-                               const Network *net) const
-{
-	double xk = r[2*k];
-	double xj = r[2*j];
-	return xk - xj + (net->Lx)*(1+net->epsilonX)*xkb + (net->Ly)*(net->gamma)*ykb;
-}
-
-double Network::Bend::get_dykj(const std::vector<double> &r,
-                               const Network *net) const
-{
-	double yk = r[2*k+1];
-	double yj = r[2*j+1];
-	return yk - yj + (net->Ly)*(1+net->epsilonY)*ykb;
-}
-
-
-double Network::Bend::get_lji(const std::vector<double> &r,
-                              const Network *net) const
-{
-	double xi = r[2*i];
-	double yi = r[2*i+1];
-	double xj = r[2*j];
-	double yj = r[2*j+1];
-		
-	double dxji = xi - xj + (net->Lx)*(1+net->epsilonX)*xib +
-                (net->Ly)*(net->gamma)*yib;
-	double dyji = yi - yj + (net->Ly)*(1+net->epsilonY)*yib;
-
-	return std::sqrt( dxji*dxji + dyji*dyji );
-}
-
-double Network::Bend::get_ljk(const std::vector<double> &r,
-                              const Network *net) const
-{
-	double xk = r[2*k  ];
-	double yk = r[2*k+1];
-	double xj = r[2*j  ];
-	double yj = r[2*j+1];
-
-	double dxjk = xk - xj + (net->Lx)*(1+net->epsilonX)*xkb +
-                (net->Ly)*(net->gamma)*ykb;
-	double dyjk = yk - yj + (net->Ly)*(1+net->epsilonY)*ykb;
-
-	return std::sqrt( dxjk*dxjk + dyjk*dyjk );
-}
-
-void Network::Bend::set_phi0(const std::vector<double>  &r, const Network *net)
-{ phi0 = get_phi(r,net); }
-
-
-double Network::Bend::get_phi(const  std::vector<double> &r,
-                              const Network *net) const
-{
-	double xi = r[2*i  ];
-	double yi = r[2*i+1];
-
-	double xj = r[2*j  ];
-	double yj = r[2*j+1];
-
-	double xk = r[2*k  ];
-	double yk = r[2*k+1];
-
-	double dxji = xi - xj + (net->Lx)*(1+net->epsilonX)*xib +
-                (net->Ly)*(net->gamma)*yib;	
-	double dyji = yi - yj + (net->Ly)*(1+net->epsilonY)*yib;
-	double dxjk = xk - xj + (net->Lx)*(1+net->epsilonX)*xkb +
-                (net->Ly)*(net->gamma)*ykb;
-	double dyjk = yk - yj + (net->Ly)*(1+net->epsilonY)*ykb;
-
-	double a = dyji*dxjk - dxji*dyjk;
-	double b = dxji*dxjk + dyji*dyjk;
-	double phi = std::atan2(a,b);
-	if (phi < 0) phi += 2*std::acos(-1);
-
-	return phi;
-}
-
-
-double Network::Bend::energy(const std::vector<double> &r,
-                             const Network *net) const
-{
-	//if( ykb != 0 or yib != 0 or xkb != 0 or xib!=0) return 0;
-	double phi = get_phi(r,net);
-	double delta_phi = phi - phi0;
-	return kappa*delta_phi*delta_phi/2;	
-}
-
-void Network::Bend::dEnergy(const std::vector<double> &r,
-                            std::vector<double> &F, const Network *net) const
-{
-	double xi = r[2*i  ];
-	double yi = r[2*i+1];
-	double xj = r[2*j  ];
-	double yj = r[2*j+1];
-
-	double xk = r[2*k  ];
-	double yk = r[2*k+1];
-
-	double dxji = xi - xj + (net->Lx)*(1 + net->epsilonX)*xib +
-                (net->Ly)*(net->gamma)*yib;	
-	double dyji = yi - yj + (net->Ly)*(1 + net->epsilonY)*yib;
-	double dxjk = xk - xj + (net->Lx)*(1 + net->epsilonX)*xkb +
-                (net->Ly)*(net->gamma)*ykb;
-	double dyjk = yk - yj + (net->Ly)*(1 + net->epsilonY)*ykb;
-
-	double a = dyji*dxjk - dxji*dyjk;
-	double b = dxji*dxjk + dyji*dyjk;
-	double phi =  std::atan2(a,b);
-	if( phi < 0 ) phi += 2*std::acos(-1);
-
-	double Falpha =  kappa*(phi-phi0);
-	double A =    b/(a*a+b*b);
-	double B = -1*a/(a*a+b*b);
-
-
-	// set F
-	F[2*i  ] += Falpha*(-A*dyjk + B*dxjk );
-	F[2*i+1] += Falpha*( A*dxjk + B*dyjk );
-	F[2*j  ] += Falpha*( A*(dyjk - dyji) - B*(dxjk + dxji) );
-	F[2*j+1] += Falpha*( A*(dxji - dxjk) - B*(dyjk + dyji) );
-	F[2*k  ] += Falpha*( A*dyji + B*dxji );
-	F[2*k+1] += Falpha*(-A*dxji + B*dyji );
-}
-
-double Network::Bend::energy_dEnergy(const  std::vector<double> &r,
-                                     std::vector<double> &F,
-                                     const Network *net) const
-{
-	dEnergy(r,F,net);
-	return energy(r,net);
-}
-
-
-
 
 
 #endif
