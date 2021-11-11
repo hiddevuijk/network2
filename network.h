@@ -315,13 +315,15 @@ double Network::getBendEnergy(int i) const
 
 void Network::bondForce(int i, std::vector<double> &F) const
 {
-  // dxij = xi - xj + "PBC"
-  double dxij = positions_[2*bonds_[i].i] - positions_[2*bonds_[i].j]
+  // dxij = xi + "PBC" - xj
+  double dxij = positions_[2*bonds_[i].i]
                 + bonds_[i].xb * length_x_ * (1 + epsilon_x_)
-                + bonds_[i].yb * length_y_ * gamma_;
+                + bonds_[i].yb * length_y_ * gamma_
+                - positions_[2*bonds_[i].j];
 
-  double dyij = positions_[2*bonds_[i].i + 1] - positions_[2*bonds_[i].j + 1]
-                + bonds_[i].yb * length_y_ * (1 + epsilon_y_); 
+  double dyij = positions_[2*bonds_[i].i + 1]
+                + bonds_[i].yb * length_y_ * (1 + epsilon_y_)
+                - positions_[2*bonds_[i].j + 1];
 
   // f = l0/l - 1
   double f = bonds_[i].l0/sqrt( dxij*dxij + dyij*dyij ) - 1;
@@ -345,18 +347,24 @@ void Network::bondForce(std::vector<double> &F) const
 
 double Network::getBendAngle(int i) const
 {
+  // xi + "PBC"
   double xi = positions_[2*bends_[i].i]
               + bends_[i].xib * length_x_ * (1 + epsilon_x_)
               + bends_[i].yib * length_y_ * gamma_;
+  // yi + "PBC"
   double yi = positions_[2*bends_[i].i + 1]
               + bends_[i].yib * length_y_ * (1 + epsilon_y_);
 
   double xj = positions_[2*bends_[i].j];
   double yj = positions_[2*bends_[i].j + 1];
 
+
+  // xk + "PBC"
   double xk = positions_[2*bends_[i].k]
               + bends_[i].xkb * length_x_ * (1 + epsilon_x_)
               + bends_[i].ykb * length_y_ * gamma_;
+
+  // yk + "PBC"
   double yk = positions_[2*bends_[i].k + 1]
               + bends_[i].ykb * length_y_ * (1 + epsilon_y_);
 
@@ -374,19 +382,30 @@ double Network::getBendAngle(int i) const
   return phi;
 }
 
+void Network::bendForce(int i, std::vector<double> &F) const
+{
+
+}
+
+void Network::bendForce(std::vector<double> & F) const
+{
+  for (int i = 0; i < number_of_bonds_; ++i) {
+    bendForce(i, F);
+  }
+}
 
 void Network::force(std::vector<double> &F) const 
 {
   std::fill(F.begin(),F.end(), 0.0);
   bondForce(F);
-  // bendForce
+  bendForce(F);
 }
 
 std::vector<double> Network::getForce() const 
 {
   std::vector<double> F(2 * number_of_nodes_, 0.0);
   bondForce(F);
-  // bendForce(F);
+  bendForce(F);
 
   return F;
 }
