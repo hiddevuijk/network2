@@ -2,7 +2,7 @@
 Nx = 10
 Lx = 10
 z = 3.3
-kappa = 1e-3
+kappa = 0
 
 seed  = 223456789
 s = 0.01
@@ -13,8 +13,8 @@ dg = 0.01
 alpha = 1.01
 
 #minimization parameters
-e = 1e-9
-emax = 1e-7
+e = 1e-13
+emax = 1e-12
 dt0 = 0.1
 dtmax = 0.5
 dtmin = 1e-1

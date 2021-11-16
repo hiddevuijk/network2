@@ -3,6 +3,7 @@
 #include "generate_graph.h"
 #include "network.h"
 #include "ConfigFile.h"
+#include "minimize.h"
 
 #include <iostream>
 #include <fstream>
@@ -30,11 +31,10 @@ int main()
 
   double gmax   = config.read<double>("gmax");
   double dg     = config.read<double>("dg");
-  double gamma  = 0;
   double alpha  = config.read<double>("alpha");
 
 
-  double e      = config.read<double>("e");
+  double error  = config.read<double>("e");
   double emax   = config.read<double>("emax");
   int    Nmin   = config.read<int>("Nmin");
   double dt0    = config.read<double>("dt0");
@@ -51,116 +51,59 @@ int main()
   string rName        = config.read<string>("rName");
   string gammaEName   = config.read<string>("gammaEName");
 
-
   Graph graph = generateGraph(Nx, Ny, Lx, z, seed, s);
   Network network(graph, Lx, Ly, kappa);
 
 
-  // save the topology of the network
+  Minimizer minimizer(network, error, emax, dt0, dtmax, dtmin, finc, fdec,
+                      Nmin, alpha0, falpha, m);
+
+
   ofstream top(topologyName + ".dat");
   graph.write(top);
   top.close();
 
-  // save the initial positions on the nodes 
   ofstream out0(r0Name + ".dat");
   network.savePositions(out0);
   out0.close();
 
-  // out stream for the data
   ofstream gEout(gammaEName + ".dat");
 
-  double Hs, Hb; // stretching and bending energy
+  double Hs, Hb; // stretch and bend energy
+
+  vector<double> sigma;
+  double V = Lx*Ly;
 
 
-  vector<double> sigma(4);  // stress tensor: s_xx, s_xy, s_yx, s_yy 
-
-
-  int i=0;
-
-  // deformation before stretching
-  //network.stretchXAffine(-0.05);
-  //network.stretchYAffine(-0.05);
-  //network.minimize(e, dt0, dtmax, dtmin,finc, fdec, Nmin, alpha0, falpha,  m);
-
-  // save  data
-  //ofstream outc("rcompressed.dat");
-  //network.savePositions(outc);
-  //outc.close();
-
-  int NF = 0; // total number of force calculations
-
-  Minimizer minimizer(network, e, emax, dt0, dtmax, dtmin, finc, fdec,
-                      Nmin, alpha0, falpha, m);
-
-  double eLine = 1e-9;
-  double dLine = 1e-1;
-  double err = 1e-9;
-  MinimizerGSL minimizerGSL(&network, eLine, dLine, err);
-
-  while (fabs(gamma) < gmax) {
-
-    gamma += dg;
-
-    // deform and minimize the energy
-
-    //network.shearAffine(dg);
-    //network.stretchX(dg);
-    //network.stretchY(dg);
+  int i = 0;
+  while (fabs(network.getGamma()) < gmax) {
+    ++i;
     network.shearAffine(dg);
-    //network.minimize(e, emax, dt0, dtmax, dtmin,finc, fdec,
-    //                 Nmin, alpha0, falpha,  m);
+
     minimizer.minimize(network);
-    //minimizerGSL.minimize(network);
-    
 
-    Hs = network.bondEnergy();	
-    Hb = network.bendEnergy();	
-    sigma = network.stress();
-    //cout << network.get_forceNorm() << endl;
+    Hs = network.getBondEnergy();
+    Hb = network.getBendEnergy();
+    sigma = network.getStress();
 
-    // std::out information 
-    if (i%10 == 0) {
-      cout << gmax << "\t" 
-           << gamma << "\t" 
-           << Hs + Hb << "\t"
-           << endl;
-           //<< network.minimizer.Fnorm/ network.minimizer.N << "\t"
-           //<< network.minimizer.Fmax() <<  "\t"
-           //<< network.minimizer.NF << endl;
-      cout << "______________________________________________________" << endl;
+    if (i % 10 == 0) {
+      cout << network.getGamma() << "\t" << (Hs + Hb)/V << endl;
     }
-
-    i++;
-
-    NF += network.minimizer.NF;	
-
-    // save energy and stress
-    gEout << gamma << '\t'
-          << Hs << '\t'
-          << Hb << '\t'
-          << -1*sigma[0] << '\t'
-          << -1*sigma[1] << '\t'
-          << -1*sigma[2] << '\t'
-          << -1*sigma[3] << endl;
+      
+    gEout << network.getGamma() << "\t"
+          << Hs/V << "\t"
+          << Hb/V << "\t"
+          << sigma[0]/V << "\t"
+          << sigma[1]/V << "\t"
+          << sigma[2]/V << "\t"
+          << sigma[3]/V << endl;
 
     ofstream out(rName + "_" + to_string(i) + ".dat");
     network.savePositions(out);
     out.close();
 
-   
-
-
-    // increase gamma increment s.t. gamma is logarithmic
     dg *= alpha;
-  }
-
-  //cout << NF << endl;
-
-  // save the final positions of the network
-  ofstream out(rName + ".dat");
-  network.savePositions(out);
-  out.close();
-
+  } 
 
 
   return 0;
