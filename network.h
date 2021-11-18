@@ -301,12 +301,14 @@ double Network::getBondEnergy(const std::vector<double> &positions) const
 
 double Network::getBondDistance(int bi) const
 {
+  // xi = positions_[i], yi = positions_[i + 1]
   int i = 2*bonds_[bi].i;
   int j = 2*bonds_[bi].j;
+
   // dx = xi - xj + "periodic bc"
   double dx = positions_[i] - positions_[j]
               - bonds_[bi].xb * length_x_ * (1 + epsilon_x_)
-              - bonds_[bi].yb * length_y_ * gamma_;
+              - bonds_[bi].yb * length_y_ * gamma_ * (1 + epsilon_y_);
 
   double dy = positions_[i + 1] - positions_[j + 1]
               - bonds_[bi].yb * length_y_ * (1 + epsilon_y_);
@@ -317,12 +319,14 @@ double Network::getBondDistance(int bi) const
 double Network::getBondDistance(int bi,
                 const std::vector<double> &positions) const
 {
+  // xi = positions_[i], yi = positions_[i + 1]
   int i = 2*bonds_[bi].i;
   int j = 2*bonds_[bi].j;
+
   // dx = xi - xj + "periodic bc"
   double dx = positions[i] - positions[j]
               - bonds_[bi].xb * length_x_ * (1 + epsilon_x_)
-              - bonds_[bi].yb * length_y_ * gamma_;
+              - bonds_[bi].yb * length_y_ * gamma_ * (1 + epsilon_y_);
 
   double dy = positions[i + 1] - positions[j + 1]
               - bonds_[bi].yb * length_y_ * (1 + epsilon_y_);
@@ -348,7 +352,7 @@ double Network::getBendDistanceji(int i) const
   // dxij = xi + "PBC" - xj 
   double dxij = positions_[2*bends_[i].i]
                 + bends_[i].xib * length_x_ * (1 + epsilon_x_)
-                + bends_[i].yib * length_y_ * gamma_
+                + bends_[i].yib * length_y_ * gamma_ * (1 + epsilon_y_)
                 - positions_[2*bends_[i].j];
 
   double dyij = positions_[2*bends_[i].i + 1]
@@ -364,7 +368,7 @@ double Network::getBendDistanceji(int i,
   // dxij = xi + "PBC" - xj 
   double dxij = positions[2*bends_[i].i]
                 + bends_[i].xib * length_x_ * (1 + epsilon_x_)
-                + bends_[i].yib * length_y_ * gamma_
+                + bends_[i].yib * length_y_ * gamma_ * (1 + epsilon_y_)
                 - positions[2*bends_[i].j];
 
   double dyij = positions_[2*bends_[i].i + 1]
@@ -379,7 +383,7 @@ double Network::getBendDistancejk(int i) const
   // dxkj = xk + "PBC" - xj 
   double dxkj = positions_[2*bends_[i].k]
                 + bends_[i].xkb * length_x_ * (1 + epsilon_x_)
-                + bends_[i].ykb * length_y_ * gamma_
+                + bends_[i].ykb * length_y_ * gamma_ * (1 + epsilon_y_)
                 - positions_[2*bends_[i].j];
 
   double dykj = positions_[2*bends_[i].k + 1] 
@@ -395,7 +399,7 @@ double Network::getBendDistancejk(int i,
   // dxkj = xk + "PBC" - xj 
   double dxkj = positions[2*bends_[i].k]
                 + bends_[i].xkb * length_x_ * (1 + epsilon_x_)
-                + bends_[i].ykb * length_y_ * gamma_
+                + bends_[i].ykb * length_y_ * gamma_ * (1 + epsilon_y_)
                 - positions[2*bends_[i].j];
 
   double dykj = positions[2*bends_[i].k + 1] 
@@ -441,7 +445,7 @@ void Network::bondForce(int bi, std::vector<double> &F) const
   // dxij = xi + "PBC" - xj
   double dxij = positions_[2*bonds_[bi].i]
                 - bonds_[bi].xb * length_x_ * (1 + epsilon_x_)
-                - bonds_[bi].yb * length_y_ * gamma_
+                - bonds_[bi].yb * length_y_ * gamma_ * (1 + epsilon_y_)
                 - positions_[2*bonds_[bi].j];
 
   double dyij = positions_[2*bonds_[bi].i + 1]
@@ -467,7 +471,7 @@ void Network::bondForce(int bi, std::vector<double> &F,
   // dxij = xi + "PBC" - xj
   double dxij = positions[2*bonds_[bi].i]
                 - bonds_[bi].xb * length_x_ * (1 + epsilon_x_)
-                - bonds_[bi].yb * length_y_ * gamma_
+                - bonds_[bi].yb * length_y_ * gamma_ * (1 + epsilon_y_)
                 - positions[2*bonds_[bi].j];
 
   double dyij = positions[2*bonds_[bi].i + 1]
@@ -512,7 +516,7 @@ double Network::getBendAngleCW(int bi) const
   // xi + "PBC"
   double xi = positions_[2*i]
               + bends_[bi].xib * length_x_ * (1 + epsilon_x_)
-              + bends_[bi].yib * length_y_ * gamma_;
+              + bends_[bi].yib * length_y_ * gamma_ * (1 + epsilon_y_);
   // yi + "PBC"
   double yi = positions_[2*i + 1]
               + bends_[bi].yib * length_y_ * (1 + epsilon_y_);
@@ -524,7 +528,7 @@ double Network::getBendAngleCW(int bi) const
   // xk + "PBC"
   double xk = positions_[2*k]
               + bends_[bi].xkb * length_x_ * (1 + epsilon_x_)
-              + bends_[bi].ykb * length_y_ * gamma_;
+              + bends_[bi].ykb * length_y_ * gamma_ * (1 + epsilon_y_);
 
   // yk + "PBC"
   double yk = positions_[2*k + 1]
@@ -547,29 +551,29 @@ double Network::getBendAngleCW(int bi) const
 double Network::getBendAngleCW(int bi,
                 const std::vector<double> &positions) const
 {
-  int i = bends_[bi].i;
-  int j = bends_[bi].j;
-  int k = bends_[bi].k;
+  int i = 2*bends_[bi].i;
+  int j = 2*bends_[bi].j;
+  int k = 2*bends_[bi].k;
 
   // xi + "PBC"
-  double xi = positions[2*i]
+  double xi = positions[i]
               + bends_[bi].xib * length_x_ * (1 + epsilon_x_)
-              + bends_[bi].yib * length_y_ * gamma_;
+              + bends_[bi].yib * length_y_ * gamma_ * (1 + epsilon_y_);
   // yi + "PBC"
-  double yi = positions[2*i + 1]
+  double yi = positions[i + 1]
               + bends_[bi].yib * length_y_ * (1 + epsilon_y_);
 
-  double xj = positions[2*j];
-  double yj = positions[2*j + 1];
+  double xj = positions[j];
+  double yj = positions[j + 1];
 
 
   // xk + "PBC"
-  double xk = positions[2*k]
+  double xk = positions[k]
               + bends_[bi].xkb * length_x_ * (1 + epsilon_x_)
-              + bends_[bi].ykb * length_y_ * gamma_;
+              + bends_[bi].ykb * length_y_ * gamma_ * (1 + epsilon_y_);
 
   // yk + "PBC"
-  double yk = positions[2*k + 1]
+  double yk = positions[k + 1]
               + bends_[bi].ykb * length_y_ * (1 + epsilon_y_);
 
   double dxji = xi - xj;
@@ -609,29 +613,29 @@ double Network::getBendAngle(int bi, const std::vector<double> &positions) const
 
 void Network::bendForce(int bi, std::vector<double> &F) const
 {
-  int i = bends_[bi].i;
-  int j = bends_[bi].j;
-  int k = bends_[bi].k;
+  int i = 2*bends_[bi].i;
+  int j = 2*bends_[bi].j;
+  int k = 2*bends_[bi].k;
 
    // xi + "PBC"
-  double xi = positions_[2*i]
+  double xi = positions_[i]
               + bends_[bi].xib * length_x_ * (1 + epsilon_x_)
-              + bends_[bi].yib * length_y_ * gamma_;
+              + bends_[bi].yib * length_y_ * gamma_ * (1 + epsilon_y_);
   // yi + "PBC"
-  double yi = positions_[2*i + 1]
+  double yi = positions_[i + 1]
               + bends_[bi].yib * length_y_ * (1 + epsilon_y_);
 
-  double xj = positions_[2*j];
-  double yj = positions_[2*j + 1];
+  double xj = positions_[j];
+  double yj = positions_[j + 1];
 
 
   // xk + "PBC"
-  double xk = positions_[2*k]
+  double xk = positions_[k]
               + bends_[bi].xkb * length_x_ * (1 + epsilon_x_)
-              + bends_[bi].ykb * length_y_ * gamma_;
+              + bends_[bi].ykb * length_y_ * gamma_ * (1 + epsilon_y_);
 
   // yk + "PBC"
-  double yk = positions_[2*k + 1]
+  double yk = positions_[k + 1]
               + bends_[bi].ykb * length_y_ * (1 + epsilon_y_);
 
   double dxji = xi - xj;
@@ -657,40 +661,40 @@ void Network::bendForce(int bi, std::vector<double> &F) const
 	double B = -1*a/(a*a + b*b);
 
 	// set F
-	F[2*i  ] -= Falpha*(-A*dyjk + B*dxjk );
-	F[2*i+1] -= Falpha*( A*dxjk + B*dyjk );
-	F[2*j  ] -= Falpha*( A*(dyjk - dyji) - B*(dxjk + dxji) );
-	F[2*j+1] -= Falpha*( A*(dxji - dxjk) - B*(dyjk + dyji) );
-	F[2*k  ] -= Falpha*( A*dyji + B*dxji );
-	F[2*k+1] -= Falpha*(-A*dxji + B*dyji );
+	F[i  ] -= Falpha*(-A*dyjk + B*dxjk );
+	F[i+1] -= Falpha*( A*dxjk + B*dyjk );
+	F[j  ] -= Falpha*( A*(dyjk - dyji) - B*(dxjk + dxji) );
+	F[j+1] -= Falpha*( A*(dxji - dxjk) - B*(dyjk + dyji) );
+	F[k  ] -= Falpha*( A*dyji + B*dxji );
+	F[k+1] -= Falpha*(-A*dxji + B*dyji );
 }
 
 void Network::bendForce(int bi, std::vector<double> &F,
               const std::vector<double> &positions) const
 {
-  int i = bends_[bi].i;
-  int j = bends_[bi].j;
-  int k = bends_[bi].k;
+  int i = 2*bends_[bi].i;
+  int j = 2*bends_[bi].j;
+  int k = 2*bends_[bi].k;
 
    // xi + "PBC"
-  double xi = positions[2*i]
+  double xi = positions[i]
               + bends_[bi].xib * length_x_ * (1 + epsilon_x_)
-              + bends_[bi].yib * length_y_ * gamma_;
+              + bends_[bi].yib * length_y_ * gamma_ * (1 + epsilon_y_);
   // yi + "PBC"
-  double yi = positions[2*i + 1]
+  double yi = positions[i + 1]
               + bends_[bi].yib * length_y_ * (1 + epsilon_y_);
 
-  double xj = positions[2*j];
-  double yj = positions[2*j + 1];
+  double xj = positions[j];
+  double yj = positions[j + 1];
 
 
   // xk + "PBC"
-  double xk = positions[2*k]
+  double xk = positions[k]
               + bends_[bi].xkb * length_x_ * (1 + epsilon_x_)
-              + bends_[bi].ykb * length_y_ * gamma_;
+              + bends_[bi].ykb * length_y_ * gamma_ * (1 + epsilon_y_);
 
   // yk + "PBC"
-  double yk = positions[2*k + 1]
+  double yk = positions[k + 1]
               + bends_[bi].ykb * length_y_ * (1 + epsilon_y_);
 
   double dxji = xi - xj;
@@ -716,12 +720,12 @@ void Network::bendForce(int bi, std::vector<double> &F,
 	double B = -1*a/(a*a + b*b);
 
 	// set F
-	F[2*i  ] -= Falpha*(-A*dyjk + B*dxjk );
-	F[2*i+1] -= Falpha*( A*dxjk + B*dyjk );
-	F[2*j  ] -= Falpha*( A*(dyjk - dyji) - B*(dxjk + dxji) );
-	F[2*j+1] -= Falpha*( A*(dxji - dxjk) - B*(dyjk + dyji) );
-	F[2*k  ] -= Falpha*( A*dyji + B*dxji );
-	F[2*k+1] -= Falpha*(-A*dxji + B*dyji );
+	F[i  ] -= Falpha*(-A*dyjk + B*dxjk );
+	F[i+1] -= Falpha*( A*dxjk + B*dyjk );
+	F[j  ] -= Falpha*( A*(dyjk - dyji) - B*(dxjk + dxji) );
+	F[j+1] -= Falpha*( A*(dxji - dxjk) - B*(dyjk + dyji) );
+	F[k  ] -= Falpha*( A*dyji + B*dxji );
+	F[k+1] -= Falpha*(-A*dxji + B*dyji );
 }
 
 void Network::bendForce(std::vector<double> & F) const
@@ -802,7 +806,7 @@ std::vector<double> Network::getStress() const
 
     dxij = positions_[i]
            - bonds_[bi].xb * length_x_ * (1 + epsilon_x_)
-           - bonds_[bi].yb * length_y_ * gamma_
+           - bonds_[bi].yb * length_y_ * gamma_ * (1 + epsilon_y_)
            - positions_[j];
 
     dyij = positions_[i + 1]
@@ -840,7 +844,7 @@ std::vector<double> Network::getStress() const
     // xi + "PBC"
     double xi = positions_[i]
                 + bends_[bi].xib * length_x_ * (1 + epsilon_x_)
-                + bends_[bi].yib * length_y_ * gamma_;
+                + bends_[bi].yib * length_y_ * gamma_ * (1 + epsilon_y_);
     // yi + "PBC"
     double yi = positions_[i + 1]
                 + bends_[bi].yib * length_y_ * (1 + epsilon_y_);
@@ -852,7 +856,7 @@ std::vector<double> Network::getStress() const
     // xk + "PBC"
     double xk = positions_[k]
                 + bends_[bi].xkb * length_x_ * (1 + epsilon_x_)
-                + bends_[bi].ykb * length_y_ * gamma_;
+                + bends_[bi].ykb * length_y_ * gamma_ * (1 + epsilon_y_);
 
     // yk + "PBC"
     double yk = positions_[k + 1]
