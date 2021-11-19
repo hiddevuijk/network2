@@ -21,7 +21,7 @@ dg = g[1] - g[0]
 
 sigma = np.gradient(H,g)
 K = np.gradient(sigma,g)
-#dK = np.gradient(K,g)
+dK = np.gradient(K,g)
 #dK2 = np.gradient(np.log(K),np.log(g))
 
 #plt.scatter(g,sxx,marker="s", label="sxx")

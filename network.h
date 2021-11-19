@@ -4,7 +4,6 @@
 //
 // TO DO:
 // - Check definition/calculation of angles and differences of angles.
-// - add to shear (1 + epsilon_y_)
 //
 
 #define _USE_MATH_DEFINES
@@ -82,8 +81,9 @@ class Network {
   double getBendEnergy() const;
   double getBendEnergy(const std::vector<double> &positions) const;
   // Returns the sum of the previous two functions.
-  double getTotalEnergy() const;
-  double getTotalEnergy(const std::vector<double> &positions) const;
+  double getTotalEnergy() const { return getBondEnergy() + getBendEnergy();}
+  double getTotalEnergy(const std::vector<double> &positions) const
+          { return getBondEnergy(positions) + getBendEnergy(positions);}
 
   void moveNode(int i, double x, double y)
   { positions_[2*i] = x; positions_[2*i+1] = y; }
@@ -128,7 +128,9 @@ class Network {
   //std::vector<double> getStress(const std::vector<double> &positions) const;
 
   std::vector<double> getPositions() const { return positions_; }
+  double getPosition(int i) const { return positions_[i]; }
   void setPositions(const std::vector<double> &p) { positions_ = p; }
+  void setPosition(int i, double r) { positions_[i] = r; }
   void savePositions(std::ostream& out) const;
 
  //private:
@@ -212,8 +214,8 @@ Network::Network(Graph &graph, double length_x, double length_y, double kappa)
   for (int bi = 0; bi < number_of_bends_; ++bi) {
     bends_[bi].j   = graph_bends[bi][0];
     bends_[bi].i   = graph_bends[bi][1];
-    bends_[bi].xib = -1*graph_bends[bi][2];
-    bends_[bi].yib = -1*graph_bends[bi][3];
+    bends_[bi].xib = graph_bends[bi][2];
+    bends_[bi].yib = graph_bends[bi][3];
     bends_[bi].k   = graph_bends[bi][4];
     bends_[bi].xkb = graph_bends[bi][5];
     bends_[bi].ykb = graph_bends[bi][6];
@@ -427,6 +429,15 @@ double Network::getBendEnergy() const
   }
   return energy;
 }
+ 
+double Network::getBendEnergy(const std::vector<double> &positions) const
+{
+  double energy = 0;   
+  for (int i = 0; i < number_of_bends_; ++i) {
+    energy += getBendEnergy(i, positions);
+  }
+  return energy;
+}
 
 double Network::getBendEnergy(int i) const
 {
@@ -442,53 +453,57 @@ double Network::getBendEnergy(int i, const std::vector<double> &positions) const
 
 void Network::bondForce(int bi, std::vector<double> &F) const
 {
+  int i = 2 * bonds_[bi].i;
+  int j = 2 * bonds_[bi].j;
   // dxij = xi + "PBC" - xj
-  double dxij = positions_[2*bonds_[bi].i]
+  double dxij = positions_[i]
                 - bonds_[bi].xb * length_x_ * (1 + epsilon_x_)
                 - bonds_[bi].yb * length_y_ * gamma_ * (1 + epsilon_y_)
-                - positions_[2*bonds_[bi].j];
+                - positions_[j];
 
-  double dyij = positions_[2*bonds_[bi].i + 1]
+  double dyij = positions_[i + 1]
                 - bonds_[bi].yb * length_y_ * (1 + epsilon_y_)
-                - positions_[2*bonds_[bi].j + 1];
+                - positions_[j + 1];
 
   // f = l0/l - 1
   double f = bonds_[bi].l0/sqrt( dxij*dxij + dyij*dyij ) - 1;
 
 
   // F[xi] = (l0/l - 1 ) * (xi - xj)
-  F[2*bonds_[bi].i] += f * dxij;
-  F[2*bonds_[bi].j] -= f * dxij;
+  F[i] += f * dxij;
+  F[j] -= f * dxij;
 
-  F[2*bonds_[bi].i + 1] += f * dyij;
-  F[2*bonds_[bi].j + 1] -= f * dyij;
+  F[i + 1] += f * dyij;
+  F[j + 1] -= f * dyij;
 
 }
 
 void Network::bondForce(int bi, std::vector<double> &F,
               const std::vector<double> &positions) const
 {
+  int i = 2 * bonds_[bi].i;
+  int j = 2 * bonds_[bi].j;
+
   // dxij = xi + "PBC" - xj
-  double dxij = positions[2*bonds_[bi].i]
+  double dxij = positions[i]
                 - bonds_[bi].xb * length_x_ * (1 + epsilon_x_)
                 - bonds_[bi].yb * length_y_ * gamma_ * (1 + epsilon_y_)
-                - positions[2*bonds_[bi].j];
+                - positions[j];
 
-  double dyij = positions[2*bonds_[bi].i + 1]
+  double dyij = positions[i + 1]
                 - bonds_[bi].yb * length_y_ * (1 + epsilon_y_)
-                - positions[2*bonds_[bi].j + 1];
+                - positions[j + 1];
 
   // f = l0/l - 1
   double f = bonds_[bi].l0/sqrt( dxij*dxij + dyij*dyij ) - 1;
 
 
   // F[xi] = (l0/l - 1 ) * (xi - xj)
-  F[2*bonds_[bi].i] += f * dxij;
-  F[2*bonds_[bi].j] -= f * dxij;
+  F[i] += f * dxij;
+  F[j] -= f * dxij;
 
-  F[2*bonds_[bi].i + 1] += f * dyij;
-  F[2*bonds_[bi].j + 1] -= f * dyij;
-
+  F[i + 1] += f * dyij;
+  F[j + 1] -= f * dyij;
 }
 
 void Network::bondForce(std::vector<double> &F) const
@@ -780,9 +795,8 @@ std::vector<double> Network::getForce(
 
 void Network::dE(std::vector<double> &F, const std::vector<double> &positions)
 {
-
   force(F, positions);
-  //for(unsigned int i = 0; i < F.size(); ++i ) F[i] *= -1;
+  for (int i = 0; i < 2 * number_of_nodes_; ++i) F[i] *= -1;
 }
 
 
@@ -800,10 +814,13 @@ std::vector<double> Network::getStress() const
   int i, j, k;
 
   for( int bi = 0; bi < number_of_bonds_; ++bi) {
-    // dxij = xi + "PBC" - xj
+    bondForce(bi, F);
+
+    // xi = positions_[i], yi = positions_[i+1]
     i = 2*bonds_[bi].i;
     j = 2*bonds_[bi].j; 
 
+    // dxij = xi + "PBC" - xj
     dxij = positions_[i]
            - bonds_[bi].xb * length_x_ * (1 + epsilon_x_)
            - bonds_[bi].yb * length_y_ * gamma_ * (1 + epsilon_y_)
@@ -816,7 +833,6 @@ std::vector<double> Network::getStress() const
     dxji = - dxij;
     dyji = - dyij;
 
-    bondForce(bi, F);
 
     sigmaXX += F[i  ] * dxji;
     sigmaXY += F[i  ] * dyji;
@@ -867,12 +883,10 @@ std::vector<double> Network::getStress() const
     dxkj = xk - xj;
     dykj = yk - yj;
 
-
     dxji = -dxij;
     dyji = -dyij;
     dxjk = -dxkj;
     dyjk = -dykj;
-
 
 
     sigmaXX += F[i  ] * dxji;

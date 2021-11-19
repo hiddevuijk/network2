@@ -4,6 +4,7 @@
 #include "network.h"
 #include "ConfigFile.h"
 #include "minimize.h"
+#include "minimize_gsl.h"
 
 #include <iostream>
 #include <fstream>
@@ -58,6 +59,11 @@ int main()
   Minimizer minimizer(network, error, emax, dt0, dtmax, dtmin, finc, fdec,
                       Nmin, alpha0, falpha, m);
 
+  double eLine = 1e-9;
+  double dLine = 1e-9;
+  double e     = 1e-12;
+  int maxIter  = 100000000;
+  MinimizerGSL minimizerGSL(&network, eLine, dLine, e, maxIter);
 
   ofstream top(topologyName + ".dat");
   graph.write(top);
@@ -77,10 +83,10 @@ int main()
 
   int i = 0;
   while (fabs(network.getGamma()) < gmax) {
-    ++i;
     network.shearAffine(dg);
 
-    minimizer.minimize(network);
+    //minimizer.minimize(network);
+    minimizerGSL.minimize(network);
 
     Hs = network.getBondEnergy();
     Hb = network.getBendEnergy();
@@ -89,6 +95,7 @@ int main()
     if (i % 10 == 0) {
       cout << network.getGamma() << "\t" << (Hs + Hb)/V << endl;
     }
+    ++i;
       
     gEout << network.getGamma() << "\t"
           << Hs/V << "\t"

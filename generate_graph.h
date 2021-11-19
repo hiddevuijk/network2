@@ -79,7 +79,7 @@ Graph generateGraph(int Nx, int Ny, double Lx, double z, long int seed = 1234567
 {
     boost::random::mt19937 rng(seed);
     boost::random::normal_distribution<double> ndist(0,1);
-    boost::variate_generator<boost::mt19937&, boost::normal_distribution<double> > rndist(rng,ndist);
+    boost::variate_generator<boost::mt19937&,boost::normal_distribution<double> > rndist(rng,ndist);
 
     boost::random::uniform_int_distribution<int> randX(0,Nx-1);
     boost::random::uniform_int_distribution<int> randY(0,Ny-1);
@@ -111,6 +111,7 @@ Graph generateGraph(int Nx, int Ny, double Lx, double z, long int seed = 1234567
         niNeighbor = niNeighborSE(xi,yi,Nx,Ny);
         if( xi == Nx -1 and yi % 2 == 1) xb = 1; 
         else xb = 0;
+
         if( yi == 0 ) yb = -1;
         else yb = 0;
         
@@ -125,8 +126,6 @@ Graph generateGraph(int Nx, int Ny, double Lx, double z, long int seed = 1234567
         else yb = 0;
         
         graph.addBond( ni, niNeighbor, xb, yb);
-
-
     }}
 
     // add Bends

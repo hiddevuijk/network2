@@ -1,6 +1,6 @@
 #network parameters
-Nx = 50
-Lx = 50
+Nx = 10
+Lx = 10
 z = 3.3
 kappa = 0.0
 

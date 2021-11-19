@@ -386,7 +386,7 @@ void Graph::delNode(int i)
 {
     Node *temp = nodes[i];
     nodes[i] = nodes.back();
-	nodes[i]->i = i;
+    nodes[i]->i = i;
     nodes.pop_back();
     delete temp;
 }

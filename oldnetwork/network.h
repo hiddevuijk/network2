@@ -809,7 +809,6 @@ void Network::Bend::dEnergy(const std::vector<double> &r,
 	double A =    b/(a*a+b*b);
 	double B = -1*a/(a*a+b*b);
 
-
 	// set F
 	F[2*i  ] += Falpha*(-A*dyjk + B*dxjk );
 	F[2*i+1] += Falpha*( A*dxjk + B*dyjk );
