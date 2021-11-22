@@ -2,7 +2,7 @@
 Nx = 20
 Lx = 20
 z = 3.3
-kappa = 0.0
+kappa = 1e-4
 
 seed  = 213456789
 s = 0.01
@@ -24,6 +24,13 @@ Nmin = 5
 alpha0 = 0.1
 falpha = 0.99
 m = 1.
+
+gslmin = 0
+#gsl minimization
+eLine = 1e-9
+dLine = 1e-9
+eg = 1e-12
+maxIter = 100000
 
 #save data to
 topologyName = topology

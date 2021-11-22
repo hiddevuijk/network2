@@ -59,10 +59,11 @@ int main()
   Minimizer minimizer(network, error, emax, dt0, dtmax, dtmin, finc, fdec,
                       Nmin, alpha0, falpha, m);
 
-  double eLine = 1e-9;
-  double dLine = 1e-9;
-  double e     = 1e-12;
-  int maxIter  = 100;
+  double eLine = config.read<double>("eLine");
+  double dLine = config.read<double>("dLine");
+  double e     = config.read<double>("eg");
+  int maxIter  = config.read<int>("maxIter");
+  bool gslmin  = config.read<bool>("gslmin");
   MinimizerGSL minimizerGSL(&network, eLine, dLine, e, maxIter);
 
   ofstream top(topologyName + ".dat");
@@ -85,8 +86,11 @@ int main()
   while (fabs(network.getGamma()) < gmax) {
     network.shearAffine(dg);
 
-    //minimizerGSL.minimize(network);
-    minimizer.minimize(network);
+    if (gslmin) {
+      minimizerGSL.minimize(network);
+    } else {
+      minimizer.minimize(network);
+    }
 
     Hs = network.getBondEnergy();
     Hb = network.getBendEnergy();
