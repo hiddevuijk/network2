@@ -796,7 +796,7 @@ std::vector<double> Network::getForce(
 void Network::dE(std::vector<double> &F, const std::vector<double> &positions)
 {
   force(F, positions);
-  for (int i = 0; i < 2 * number_of_nodes_; ++i) F[i] *= -1;
+  //for (int i = 0; i < 2 * number_of_nodes_; ++i) F[i] *= -1;
 }
 
 

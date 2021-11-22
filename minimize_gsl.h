@@ -3,7 +3,6 @@
 
 #include "gsl/gsl_multimin.h"
 
-#include <iostream>
 
 std::vector<double> gsl2vec(const gsl_vector *v)
 {
@@ -31,8 +30,9 @@ void my_df(const gsl_vector *v, void *params, gsl_vector *df)
   std::vector<double> std_df(2 * network_ptr->getNumberOfNodes(), 0.0);
   network_ptr->dE(std_df, positions);
 
+  // -1 because dE calculates the forces
   for (unsigned int i = 0; i < std_df.size(); ++i) {
-     gsl_vector_set(df, i, std_df[i]);
+     gsl_vector_set(df, i, -1*std_df[i]);
   }
 }
 
@@ -95,11 +95,10 @@ void MinimizerGSL::minimize(Network &network)
     status = gsl_multimin_test_gradient(s->gradient, e);
 
   } while (status == GSL_CONTINUE && iter < maxIter);
-  std::cout << "\t\t\t" << iter << std::endl;
 
   // set positions network
   for (int i = 0; i < N; ++i) {
-    network.setPosition(i, gsl_vector_get(x, i));
+    network.setPosition(i, gsl_vector_get(s->x, i));
   }
 
   gsl_multimin_fdfminimizer_free(s);

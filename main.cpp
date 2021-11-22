@@ -62,7 +62,7 @@ int main()
   double eLine = 1e-9;
   double dLine = 1e-9;
   double e     = 1e-12;
-  int maxIter  = 100000000;
+  int maxIter  = 100;
   MinimizerGSL minimizerGSL(&network, eLine, dLine, e, maxIter);
 
   ofstream top(topologyName + ".dat");
@@ -85,8 +85,8 @@ int main()
   while (fabs(network.getGamma()) < gmax) {
     network.shearAffine(dg);
 
-    //minimizer.minimize(network);
-    minimizerGSL.minimize(network);
+    //minimizerGSL.minimize(network);
+    minimizer.minimize(network);
 
     Hs = network.getBondEnergy();
     Hb = network.getBendEnergy();
