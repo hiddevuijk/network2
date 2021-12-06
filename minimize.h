@@ -28,12 +28,19 @@ class Minimizer {
 
   }
 
+  void setError(double error, double maxError);
   void minimize(Network &network);
 
   Fire<Network> fire;
 
 };
 
+
+void Minimizer::setError(double error, double maxError)
+{
+  fire.error = error;
+  fire.error_max = maxError;
+}
 void Minimizer::minimize(Network &network) 
 {
   fire.minimizeVV(network.getPositions());  

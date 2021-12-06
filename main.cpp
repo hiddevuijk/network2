@@ -54,7 +54,7 @@ int main()
 
   Graph graph = generateGraph(Nx, Ny, Lx, z, seed, s);
   Network network(graph, Lx, Ly, kappa);
-
+  
 
   Minimizer minimizer(network, error, emax, dt0, dtmax, dtmin, finc, fdec,
                       Nmin, alpha0, falpha, m);
@@ -115,6 +115,10 @@ int main()
 
     dg *= alpha;
   } 
+
+  ofstream out("r.dat");
+  network.savePositions(out);
+  out.close();
 
 
   return 0;

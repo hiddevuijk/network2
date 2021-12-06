@@ -156,18 +156,10 @@ void Fire<E>::make_VV_step()
 	Fnorm = std::sqrt(Fnorm);
 	vnorm = std::sqrt(vnorm);
 
-	if(Fnorm == 0 ) {
-		for(int i=0; i<N; ++i) {
-			v[i] += -alpha*v[i];
-			x[i] += dt*v[i];
-		}
-	} else {
-		for(int i=0; i<N; ++i) {
-			v[i] += -alpha*v[i] + alpha*F[i]*vnorm/Fnorm;
-			x[i] += dt*v[i];
-		}
+	for(int i=0; i<N; ++i) {
+		v[i] += -alpha*v[i] + alpha*F[i]*vnorm/Fnorm;
+		x[i] += dt*v[i];
 	}
-		
 
 	energy->dE(F,x);
 
@@ -189,18 +181,10 @@ void Fire<E>::make_EE_step()
 	Fnorm = std::sqrt(Fnorm);
 	vnorm = std::sqrt(vnorm);
 
-	if(Fnorm == 0 ) {
-		for(int i=0; i<N; ++i) {
-			v[i] += -alpha*v[i];
-			x[i] += dt*v[i];
-		}
-	} else {
-		for(int i=0; i<N; ++i) {
-			v[i] += -alpha*v[i] + alpha*F[i]*vnorm/Fnorm;
-			x[i] += dt*v[i];
-		}
+	for(int i=0;i<N; ++i) {
+		v[i] += -alpha*v[i] + alpha*F[i]*vnorm/Fnorm;
+		x[i] += dt*v[i];
 	}
-
 	energy->dE(F,x);
 	for(int i=0;i<N; ++i) {
 		v[i] += dt*F[i]/m;	
@@ -222,16 +206,9 @@ void Fire<E>::make_SIE_step()
 	Fnorm = std::sqrt(Fnorm);
 	vnorm = std::sqrt(vnorm);
 
-	if(Fnorm == 0 ) {
-		for(int i=0; i<N; ++i) {
-			v[i] += -alpha*v[i];
-			x[i] += dt*v[i];
-		}
-	} else {
-		for(int i=0; i<N; ++i) {
-			v[i] += -alpha*v[i] + alpha*F[i]*vnorm/Fnorm;
-			x[i] += dt*v[i];
-		}
+	for(int i=0; i<N; ++i) {
+		v[i] += -alpha*v[i] + alpha*F[i]*vnorm/Fnorm;
+		x[i] += dt*v[i];
 	}
 
 	energy->dE(F,x);
