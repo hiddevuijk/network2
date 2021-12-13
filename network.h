@@ -47,7 +47,7 @@ class Bend {
 
 class Network {
  public:
-  Network(Graph &graph, double Lx, double Ly, double kappa);
+  Network(Graph &graph, double Lx, double Ly, double kappa, bool noBendBoundary = false);
 
   int getNumberOfNodes() const { return number_of_nodes_; }
   int getNumberOfBonds() const { return number_of_bonds_; }
@@ -178,7 +178,8 @@ class Network {
 };
 
 
-Network::Network(Graph &graph, double length_x, double length_y, double kappa)
+Network::Network(Graph &graph, double length_x, double length_y,
+                 double kappa, bool noBendBoundary)
   : gamma_(0), epsilon_x_(0), epsilon_y_(0), positions_(2*graph.Nnodes()),
     length_x_(length_x), length_y_(length_y), number_of_nodes_(graph.Nnodes()),
     number_of_bonds_(graph.Nbonds()), number_of_bends_(graph.Nbends()),
@@ -212,6 +213,7 @@ Network::Network(Graph &graph, double length_x, double length_y, double kappa)
 
   std::vector<std::vector<int> > graph_bends = graph.getBends();
   for (int bi = 0; bi < number_of_bends_; ++bi) {
+      
     bends_[bi].j   = graph_bends[bi][0];
     bends_[bi].i   = graph_bends[bi][1];
     bends_[bi].xib = graph_bends[bi][2];
@@ -220,6 +222,14 @@ Network::Network(Graph &graph, double length_x, double length_y, double kappa)
     bends_[bi].xkb = graph_bends[bi][5];
     bends_[bi].ykb = graph_bends[bi][6];
     bends_[bi].kappa = kappa;
+
+    if ( (bends_[bi].xib != 0 or
+          bends_[bi].yib != 0 or
+          bends_[bi].xkb != 0 or
+          bends_[bi].ykb != 0) and
+           noBendBoundary )
+      {bends_[bi].kappa=0; }
+ 
   }
 
   resetRestLength();
@@ -272,7 +282,9 @@ void Network::resetKappa(double kappa)
   for (int i = 0; i < number_of_bends_; ++i) {
     lji = getBendDistanceji(i);
     ljk = getBendDistancejk(i);
-    bends_[i].kappa = kappa*(lji + ljk)/2;
+    if (bends_[i].kappa != 0 ) {
+      bends_[i].kappa = kappa*(lji + ljk)/2;
+    }
   }
 }
 
@@ -796,6 +808,8 @@ std::vector<double> Network::getForce(
 void Network::dE(std::vector<double> &F, const std::vector<double> &positions)
 {
   force(F, positions);
+  F[0] = 0;
+  F[1] = 0;
   //for (int i = 0; i < 2 * number_of_nodes_; ++i) F[i] *= -1;
 }
 

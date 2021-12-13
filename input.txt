@@ -1,20 +1,23 @@
 #network parameters
-Nx = 20
-Lx = 20 
-z = 3.3
-kappa = 1.e-6
 
-seed  = 213456789
+noBendBoundary = 0
+
+Nx = 20
+Lx = 20
+z = 3.3
+kappa = 0.
+
+seed  = 112111729
 s = 0.01
 
 #shear parameters
 gmax = 12
-dg = 0.0005
+dg = 0.005
 alpha = 1.01
 
 #minimization parameters
-e = 1e-10
-emax = 1e-10
+e = 1e-12
+emax = 1e-12
 dt0 = 0.2
 dtmax = 0.5
 dtmin = 1e-2
@@ -28,8 +31,8 @@ m = 1.
 gslmin = 0
 #gsl minimization
 eLine = 1e-3
-dLine = 1e-3
-eg = 1e-9
+dLine = 1e0-3
+eg = 1e-12
 maxIter = 100000
 
 #save data to

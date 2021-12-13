@@ -70,8 +70,8 @@ void MinimizerGSL::minimize(Network &network)
   const gsl_multimin_fdfminimizer_type *T;
   gsl_multimin_fdfminimizer *s;
 
-  //T = gsl_multimin_fdfminimizer_conjugate_fr;
-  T = gsl_multimin_fdfminimizer_vector_bfgs2;
+  T = gsl_multimin_fdfminimizer_conjugate_fr;
+  //T = gsl_multimin_fdfminimizer_vector_bfgs2;
   s = gsl_multimin_fdfminimizer_alloc(T, N);
 
 

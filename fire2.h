@@ -84,6 +84,7 @@ void Fire<E>::initialize( const std::vector<double>& xInit)
 
 	// calculate F(t)
 	energy->dE(F,x);	
+
 	// set v[i] = 0
 	std::fill(v.begin(), v.end(), 0.0);
 	dt = dt0;

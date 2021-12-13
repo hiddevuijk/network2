@@ -19,6 +19,8 @@ int main()
   // Read data from the input file
   ConfigFile config("input.txt");
 
+  bool noBendBoundary = config.read<bool>("noBendBoundary");
+
   int Nx = config.read<int>("Nx");
   int Ny = Nx;
   assert(Ny % 2 == 0); // due to periodic boundary conditions
@@ -53,7 +55,7 @@ int main()
   string gammaEName   = config.read<string>("gammaEName");
 
   Graph graph = generateGraph(Nx, Ny, Lx, z, seed, s);
-  Network network(graph, Lx, Ly, kappa);
+  Network network(graph, Lx, Ly, kappa, noBendBoundary);
   
 
   Minimizer minimizer(network, error, emax, dt0, dtmax, dtmin, finc, fdec,

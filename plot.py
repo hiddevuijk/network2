@@ -8,13 +8,13 @@ topology.close()
 
 Lx = 10
 Ly = Lx*np.sqrt(3/4.)
-gamma = 12
+gamma = 10
 Nv = int( lines[0].strip() )
 Ne = int( lines[1].strip() )
 Nb = int( lines[2].strip() )
 
 # read positions from r0.dat
-rList = open('r0.dat').readlines()
+rList = open('r_200.dat').readlines()
 xList = np.zeros(Nv)
 yList = np.zeros(Nv)
 
