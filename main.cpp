@@ -5,6 +5,7 @@
 #include "ConfigFile.h"
 #include "minimize.h"
 #include "minimize_gsl.h"
+#include "get_gamma_list.h"
 
 #include <iostream>
 #include <fstream>
@@ -34,11 +35,14 @@ int main()
 
   double gmax   = config.read<double>("gmax");
   double dg     = config.read<double>("dg");
+  double dg0 = dg;
   double alpha  = config.read<double>("alpha");
+  double gc     = config.read<double>("gc");
 
 
   double error  = config.read<double>("e");
   double emax   = config.read<double>("emax");
+  double Herr   = config.read<double>("Herr");
   int    Nmin   = config.read<int>("Nmin");
   double dt0    = config.read<double>("dt0");
   double dtmax  = config.read<double>("dtmax");
@@ -78,14 +82,17 @@ int main()
 
   ofstream gEout(gammaEName + ".dat");
 
-  double Hs, Hb; // stretch and bend energy
+  double Hs, Hb, H; // stretch and bend energy
 
   vector<double> sigma;
   double V = Lx*Ly;
 
+  vector<double> gamma_list = getGammaList(dg0, gmax, gc, alpha);
 
   int i = 0;
   while (fabs(network.getGamma()) < gmax) {
+    dg = gamma_list[i+1] - gamma_list[i];
+
     network.shearAffine(dg);
 
     if (gslmin) {
@@ -96,10 +103,15 @@ int main()
 
     Hs = network.getBondEnergy();
     Hb = network.getBendEnergy();
+    H = (Hs + Hb)/V;
     sigma = network.getStress();
 
-    if (i % 10 == 0) {
-      cout << network.getGamma() << "\t" << (Hs + Hb)/V << endl;
+    if( H > Herr) minimizer.setError( error*H/Herr, emax*H/Herr);
+    //if(H > 1e-5) minimizer.setError( 10*error, 10*emax);
+    //if(H > 1e-6) minimizer.setError( 100*error, 100*emax);
+
+    if (i % 1 == 0) {
+      cout << network.getGamma() << "\t" << H << endl;
     }
     ++i;
       
@@ -115,7 +127,6 @@ int main()
     network.savePositions(out);
     out.close();
 
-    dg *= alpha;
   } 
 
   ofstream out("r.dat");

@@ -17,6 +17,10 @@ syy = data[:N,6]
 
 H = Hs + Hb
 
+Hi = 0
+while H[Hi] < 1e-3: Hi += 1
+plt.axvline( g[Hi])
+
 dg = g[1] - g[0]
 
 sigma = np.gradient(H,g)

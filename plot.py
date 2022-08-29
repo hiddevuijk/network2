@@ -6,15 +6,15 @@ topology = open('topology.dat')
 lines = topology.readlines()
 topology.close()
 
-Lx = 10
+Lx = 12
 Ly = Lx*np.sqrt(3/4.)
-gamma = 10
+gamma = 0
 Nv = int( lines[0].strip() )
 Ne = int( lines[1].strip() )
 Nb = int( lines[2].strip() )
 
 # read positions from r0.dat
-rList = open('r_200.dat').readlines()
+rList = open('r0.dat').readlines()
 xList = np.zeros(Nv)
 yList = np.zeros(Nv)
 
@@ -62,9 +62,13 @@ for ei in range(Ne):
 #plt.scatter(xList, yList,color='black', s=30, zorder=10)
 
 d = 0.0075
-for i in range(Nv):
-    plt.annotate( i, ( xList[i]-d, yList[i]-d ), color='red', zorder = 11 )
+#for i in range(Nv):
+#    plt.annotate( i, ( xList[i]-d, yList[i]-d ), color='red', zorder = 11 )
 
+for i in range(Nv):
+    plt.scatter(xList[i], yList[i], color='red', zorder=11, s=5)
+plt.axis("off")
 plt.gca().set_aspect('equal')
+plt.tight_layout()
 
 plt.show()

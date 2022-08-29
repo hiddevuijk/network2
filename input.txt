@@ -2,22 +2,24 @@
 
 noBendBoundary = 0
 
-Nx = 20
-Lx = 20
+Nx = 12
+Lx = 12
 z = 3.3
-kappa = 0.
+kappa = 0
 
-seed  = 112111729
+seed  = 123111729
 s = 0.01
 
 #shear parameters
 gmax = 12
-dg = 0.005
-alpha = 1.01
+dg = 0.05
+alpha = 1.05
+gc = 0.257
 
 #minimization parameters
-e = 1e-12
-emax = 1e-12
+e = 1e-10
+emax = 1e-10
+Herr = 1e-3
 dt0 = 0.2
 dtmax = 0.5
 dtmin = 1e-2
